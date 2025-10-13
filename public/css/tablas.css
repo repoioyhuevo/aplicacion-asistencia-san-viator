@@ -1,0 +1,146 @@
+/* === TABLA BASE === */
+.tabla-dinamica {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 25px;
+  font-size: 15px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Encabezado */
+.tabla-dinamica thead {
+  background: rgb(8,88,95);
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Celdas */
+.tabla-dinamica th,
+.tabla-dinamica td {
+  padding: 10px 14px;
+  text-align: left;
+  border: 1px solid rgba(8,88,95,0.3);
+}
+
+/* Filas alternas */
+.tabla-dinamica tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+/* Hover fila */
+.tabla-dinamica tbody tr:hover {
+  background-color: rgba(8,88,95,0.08);
+  transition: background 0.2s ease-in-out;
+}
+
+/* Indicadores de orden (si los usas) */
+.tabla-dinamica th {
+  cursor: pointer;
+  position: relative;
+  user-select: none;
+}
+.tabla-dinamica th.asc::after { content: " ▲"; font-size: 12px; }
+.tabla-dinamica th.desc::after { content: " ▼"; font-size: 12px; }
+
+/* === ESTADOS DE ASISTENCIA === */
+.tabla-dinamica td.critico {
+  color: white;
+  background-color: #c0392b; /* rojo */
+  font-weight: bold;
+  text-align: center;
+  border-radius: 4px;
+}
+
+.tabla-dinamica td.medio {
+  color: #000;
+  background-color: #f1c40f; /* amarillo */
+  font-weight: bold;
+  text-align: center;
+  border-radius: 4px;
+}
+
+.tabla-dinamica td.bueno {
+  color: white;
+  background-color: #27ae60; /* verde */
+  font-weight: bold;
+  text-align: center;
+  border-radius: 4px;
+}
+
+/* === CONTENEDOR === */
+.tabla-contenedor {
+  margin-top: 30px;
+  padding: 20px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+}
+
+.titulo-tabla {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: rgb(8,88,95);
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+/* === SECCIÓN DE TABLAS LADO A LADO === */
+.seccion-tablas {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 25px;
+  margin-top: 30px;
+  flex-wrap: wrap; /* para hacerlo responsive */
+}
+
+.tabla-panel {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* 📊 Distribución visual específica */
+.tabla-panel.resumen-diario {
+  flex: 0 0 40%;  /* más pequeño */
+  min-width: 400px;
+}
+
+.tabla-panel.alumnos-criticos {
+  flex: 1;        /* más grande */
+  min-width: 500px;
+}
+
+.tabla-panel .titulo-tabla {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: rgb(8,88,95);
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+/* === RESPONSIVO === */
+@media (max-width: 1100px) {
+  .seccion-tablas {
+    flex-direction: column;
+  }
+  .tabla-panel {
+    width: 100%;
+    min-width: unset;
+  }
+}
+
+@media (max-width: 768px) {
+  .tabla-dinamica th, 
+  .tabla-dinamica td {
+    padding: 8px;
+    font-size: 13px;
+  }
+  .tabla-panel {
+    padding: 15px;
+  }
+}

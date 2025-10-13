@@ -1,0 +1,45 @@
+<!-- views/login.ejs -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Iniciar Sesión</title>
+  <link rel="stylesheet" href="/css/login.css">
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-card">
+      <img src="/img/logo.png" alt="Logo" class="logo">
+      <h2>Iniciar Sesión - <%= role.charAt(0).toUpperCase() + role.slice(1) %></h2>
+
+      <form method="post" action="/login">
+        <input type="hidden" name="role" value="<%= role %>">
+
+        <% if (role === 'alumno') { %>
+          <label for="rut">RUT:</label>
+          <input type="text" id="rut" name="rut" required placeholder="12.345.678-9">
+        <% } else { %>
+          <label for="nombre_usuario">Usuario:</label>
+          <input type="text" id="nombre_usuario" name="nombre_usuario" required placeholder="usuario">
+
+          <label for="contraseña">Contraseña:</label>
+          <input type="password" id="contraseña" name="contraseña" required placeholder="contraseña">
+        <% } %>
+
+        <% if (error) { %>
+          <div class="error"><%= error %></div>
+        <% } %>
+
+        <button type="submit">Entrar</button>
+      </form>
+
+      <div class="role-links">
+        <a href="/login?role=alumno">Alumno</a> |
+        <a href="/login?role=docente">Docente</a> |
+        <a href="/login?role=admin">Admin</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

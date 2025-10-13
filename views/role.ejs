@@ -1,0 +1,21 @@
+<!-- views/role.ejs -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Seleccionar Rol</title>
+  <link rel="stylesheet" href="/css/role.css">
+</head>
+<body>
+  <div class="role-container">
+    <img src="/img/logo.png" alt="Logo" class="logo">
+    <h2>Selecciona tu rol</h2>
+    <form method="get" action="/login">
+      <button type="submit" name="role" value="alumno">Alumno</button>
+      <button type="submit" name="role" value="docente">Docente</button>
+      <button type="submit" name="role" value="admin">Admin</button>
+    </form>
+  </div>
+</body>
+</html>

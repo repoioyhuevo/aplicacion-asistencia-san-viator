@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dashboard Docente</title>
+
+  <link rel="stylesheet" href="/css/dashboard-profesor.css" />
+  <link rel="stylesheet" href="/css/tablas.css" />
+
+  <!-- Chart.js y plugin para etiquetas -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+
+  <!-- Flatpickr -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+
+  <style>
+    .flatpickr-day.disabled {
+      background-color: #f1f1f1 !important;
+      color: #ccc !important;
+    }
+
+    /* Mantiene los gráficos proporcionados */
+    .chart-container {
+      position: relative;
+      width: 100%;
+      height: 350px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    canvas {
+      max-width: 100%;
+      max-height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo-container">
+      <img src="/img/logo.png" alt="Logo" class="logo" />
+      <div class="header-center">
+        <span class="title-top">Fundación</span>
+        <span class="title-bottom">Colegio San Viator</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <a href="/logout" class="btn-logout">Cerrar sesión</a>
+    </div>
+  </header>
+
+  <section class="filtros">
+    <div class="filtro-item">
+      <label>Fecha</label>
+      <input type="text" id="fechaInicio" placeholder="Fecha de inicio" />
+      <span>→</span>
+      <input type="text" id="fechaFin" placeholder="Fecha de fin" />
+    </div>
+
+    <div class="filtro-item">
+      <label>Nivel</label>
+      <select id="nivel">
+        <option value="todos">Todos</option>
+        <option value="parvularia">Parvularia</option>
+        <option value="basica">Básica</option>
+        <option value="media">Media</option>
+      </select>
+    </div>
+
+    <div class="filtro-item">
+      <label>Grado</label>
+      <select id="grado">
+        <option value="todos">Todos</option>
+      </select>
+    </div>
+
+    <div class="filtro-item">
+      <label>Curso</label>
+      <select id="curso">
+        <option value="todos">Todos</option>
+      </select>
+    </div>
+
+    <button class="btn-filtrar">Filtrar</button>
+  </section>
+
+  <main class="paneles">
+    <div class="panel">
+      <h3>Distribución de asistencias</h3>
+      <div class="chart-container">
+        <canvas id="graficoCircular"></canvas>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Asistencias mensuales</h3>
+      <div class="chart-container">
+        <canvas id="graficoLineas"></canvas>
+      </div>
+    </div>
+  </main>
+
+  <section class="seccion-tablas">
+    <div class="tabla-panel resumen-diario">
+      <h2 class="titulo-tabla">📅 Resumen por día</h2>
+      <table id="tablaAsistencias" class="tabla-dinamica">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Asistencias</th>
+            <th>Faltas</th>
+            <th>% Asistencia</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="tabla-panel alumnos-criticos">
+      <h2 class="titulo-tabla">⚠️ Alumnos Críticos (menos del 50%)</h2>
+      <table id="tablaCriticos" class="tabla-dinamica">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>RUT</th>
+            <th>Curso</th>
+            <th>Asistencias</th>
+            <th>Faltas</th>
+            <th>%</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td colspan="6" style="text-align:center;">No hay alumnos críticos</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <script src="/js/dashboard.js" defer></script>
+</body>
+</html>

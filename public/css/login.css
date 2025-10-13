@@ -1,0 +1,72 @@
+
+
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: rgb(255,222,106);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.login-card {
+  background: #fff;
+  padding: 40px;
+  border-radius: 15px;
+  box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.2);
+  width: 350px;
+  text-align: center;
+}
+
+/* Logo */
+.logo {
+  width: 80px;
+  margin-bottom: 15px;
+}
+
+/* Título */
+.login-card h2 {
+  margin-bottom: 20px;
+  color: rgb(8,88,95);
+}
+
+/* Inputs y botón */
+.login-card input,
+.login-card button {
+  width: 100%;          
+  padding: 12px;         
+  margin: 10px 0;        
+  font-size: 14px;       
+  border: 1px solid #ccc; 
+  display: block;        
+  box-sizing: border-box; 
+}
+
+
+.login-card button {
+  border: none;
+  background: rgb(8,88,95);
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.login-card button:hover {
+  background: rgb(255, 70, 50);
+}
+
+
+.error {
+  color: red;
+  font-size: 14px;
+  margin-top: 5px;
+}

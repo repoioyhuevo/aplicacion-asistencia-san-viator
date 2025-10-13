@@ -1,0 +1,33 @@
+<!-- views/dashboard-alumno.ejs -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Dashboard Alumno</title>
+  <link rel="stylesheet" href="/css/dashboard-alumno.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+</head>
+<body>
+  <div class="alumno-card">
+    <h2>Bienvenido, <%= name %></h2>
+    <p><strong>RUT:</strong> <%= rut %></p>
+
+    <!-- QR -->
+    <div class="qr-section">
+      <h3>Tu código QR</h3>
+      <canvas id="qr"></canvas>
+    </div>
+
+    <a href="/logout">Cerrar sesión</a>
+  </div>
+
+  <script>
+    const qr = new QRious({
+      element: document.getElementById('qr'),
+      value: "<%= rut %>|<%= name %>",
+      size: 200
+    });
+  </script>
+</body>
+</html>

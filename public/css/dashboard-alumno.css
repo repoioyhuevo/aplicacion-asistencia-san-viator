@@ -1,0 +1,91 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  font-family: Arial, sans-serif;
+  background-color: rgb(255,222,106);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.alumno-card {
+  max-width: 500px;
+  width: 90%;
+  background-color: white;
+  padding: 25px;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  text-align: center;
+}
+
+.alumno-card h2 {
+  font-size: 24px;
+  margin-bottom: 15px;
+}
+
+.alumno-card p {
+  font-size: 16px;
+  margin-bottom: 20px;
+}
+
+/* QR */
+.qr-section {
+  margin: 20px 0;
+}
+.qr-section h3 {
+  margin-bottom: 10px;
+  font-size: 18px;
+}
+.qr-section canvas {
+  border: 3px solid #007bff;
+  border-radius: 10px;
+  padding: 5px;
+  background: #fff;
+}
+
+/* Lista de opciones */
+.alumno-card ul {
+  list-style: none;
+  margin-top: 15px;
+  padding: 0;
+}
+.alumno-card ul li {
+  background-color: rgb(8,88,95); 
+  padding: 12px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  font-size: 16px;
+}
+.btn-text{
+  color:white;
+}
+
+/* Botón Cerrar sesión al final */
+.alumno-card .btn-logout {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 12px 28px;
+  background: #ff4d4d;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 5px;
+  font-size: 16px;
+  border: 2px solid #cc0000;
+  transition: background 0.2s;
+}
+.alumno-card .btn-logout:hover { background: #cc0000; }
+
+/* Responsive móvil */
+@media (max-width: 600px) {
+  .alumno-card { width: 95%; padding: 20px; }
+
+  .alumno-card h2 { font-size: 22px; }
+  .alumno-card p { font-size: 15px; }
+  .qr-section canvas { width: 280px; height: 280px; }
+
+  .alumno-card ul li { font-size: 15px; padding: 10px; }
+  .alumno-card .btn-logout { width: 100%; font-size: 14px; padding: 10px; }
+}
+
+

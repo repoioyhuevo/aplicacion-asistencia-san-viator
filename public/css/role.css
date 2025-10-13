@@ -1,0 +1,91 @@
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: rgb(255,222,106);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+/* Contenedor de roles */
+.role-container {
+  background: #fff;
+  padding: 40px; 
+  border-radius: 15px; 
+  box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.2); 
+  width: 330px; 
+  max-width: 100%; 
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 15px; /
+}
+
+
+.role-container:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.2);
+}
+
+h2 {
+  font-size: 24px;
+  margin-bottom: 25px;
+  color: rgb(8,88,95);
+}
+
+/* Botones de roles */
+.role-btn {
+  width: 100%;
+  padding: 14px;
+  margin: 12px 0;
+  font-size: 16px;
+  border: none;
+  
+  cursor: pointer;
+  font-weight: bold;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 12px rgba(0,0,0,0.2);
+}
+
+.role-btn.alumno {
+  background-color: rgb(8,88,95);
+}
+
+.role-btn.profesor {
+   background-color: rgb(8,88,95);
+}
+
+.role-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.25);
+}
+
+/* Desktop */
+@media (min-width: 768px) {
+  .role-container { padding: 50px; }
+  .role-btn { font-size: 18px; padding: 16px; }
+}
+
+/* Móvil */
+@media (max-width: 600px) {
+  .role-container { width: 90%; padding: 35px; }
+  h2 { font-size: 22px; }
+  .role-btn { padding: 16px; font-size: 16px; }
+}
+
+
+.role-container .logo {
+  width: 80px;          
+  margin-bottom: 15px; 
+  display: block;
+  margin-left: auto;
+  margin-right: auto;   
+
+}

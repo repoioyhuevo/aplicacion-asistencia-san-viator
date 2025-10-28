@@ -1,4 +1,4 @@
-// controllers/authController.js
+// controllers/authController.js - VERSIÓN CORREGIDA PARA DOCENTE Y ADMIN
 const userModel = require('../models/userModel');
 
 exports.showLogin = (req, res) => {
@@ -21,8 +21,13 @@ exports.login = async (req, res) => {
 
     console.log('🔐 Intento de login:', { identifier, role });
 
-    // ✅ CORREGIDO: Pasar parámetros separados, no objeto
-    const user = await userModel.findUser(identifier, role);
+    let user;
+    if (role === 'alumno') {
+      user = await userModel.findUser(identifier, role);
+    } else {
+      // Para docente O admin, buscar por nombre_usuario
+      user = await userModel.findUserByUsername(identifier);
+    }
 
     if (!user) {
       console.log('❌ Usuario no encontrado');
@@ -32,14 +37,10 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Verificar contraseña (para docente)
+    // Verificar contraseña (para docente/admin)
     if (role !== 'alumno') {
-      // Si usas encriptación:
-      // const bcrypt = require('bcryptjs');
-      // const isPasswordValid = await bcrypt.compare(password, user.password);
-      
-      // Si NO usas encriptación (contraseña en texto plano):
-      const isPasswordValid = password === user.password;
+      // Usar la columna correcta: contraseña
+      const isPasswordValid = password === user.contraseña;
       
       if (!isPasswordValid) {
         console.log('❌ Contraseña incorrecta');
@@ -48,9 +49,21 @@ exports.login = async (req, res) => {
           error: 'Usuario o contraseña inválida' 
         });
       }
+
+      // ✅ VERIFICACIÓN CORREGIDA: Permitir tanto docente como admin
+      // Si el usuario intenta login como "docente" pero es "admin", PERMITIR
+      // Si el usuario intenta login como "admin" pero es "docente", PERMITIR
+      // Ambos roles pueden acceder
+      if (!(user.rol === 'docente' || user.rol === 'admin')) {
+        console.log(`❌ Rol no autorizado: usuario es ${user.rol}`);
+        return res.render('login', { 
+          role, 
+          error: 'Acceso no autorizado para este rol' 
+        });
+      }
     }
 
-    // Configurar sesión según el rol
+    // Configurar sesión
     if (role === 'alumno') {
       req.session.user = {
         id: user.id,
@@ -60,19 +73,22 @@ exports.login = async (req, res) => {
       };
     } else {
       req.session.user = {
-        id: user.id,
-        name: user.nombre_completo || user.nombre_usuario,
-        role: user.rol || 'docente'
+        id: user.id_usuario,
+        username: user.nombre_usuario,
+        name: user.nombre_completo,
+        role: user.rol // Mantener el rol REAL del usuario (docente o admin)
       };
     }
 
-    console.log(`✅ Login exitoso para: ${identifier}, rol: ${role}`);
+    console.log(`✅ Login exitoso para: ${identifier}, rol real: ${user.rol}`);
 
-    // Redirigir según el rol
+    // Redirigir según el rol REAL del usuario
     if (role === 'alumno') {
       return res.redirect('/dashboard-alumno');
-    } else {
+    } else if (user.rol === 'docente') {
       return res.redirect('/dashboard-docente');
+    } else if (user.rol === 'admin') {
+      return res.redirect('/dashboard-docente'); // o la ruta que uses para admin
     }
 
   } catch (error) {

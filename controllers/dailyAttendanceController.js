@@ -15,8 +15,17 @@ async function obtenerFeriadosChile(año) {
   return new Promise((resolve, reject) => {
     const url = `https://apis.digital.gob.cl/fl/feriados/${año}`;
     
-    https.get(url, (response) => {
+    console.log(`🔗 Solicitando feriados para ${año} desde: ${url}`);
+    
+    const req = https.get(url, (response) => {
       let data = '';
+
+      // Verificar el status code
+      if (response.statusCode !== 200) {
+        console.log(`⚠️ API de feriados respondió con status: ${response.statusCode}`);
+        resolve(obtenerFeriadosPorDefecto(año));
+        return;
+      }
 
       response.on('data', (chunk) => {
         data += chunk;
@@ -24,7 +33,22 @@ async function obtenerFeriadosChile(año) {
 
       response.on('end', () => {
         try {
+          // Verificar que la respuesta no esté vacía
+          if (!data || data.trim() === '') {
+            console.log('⚠️ Respuesta de feriados vacía, usando lista por defecto');
+            resolve(obtenerFeriadosPorDefecto(año));
+            return;
+          }
+          
           const feriados = JSON.parse(data);
+          
+          // Verificar que sea un array
+          if (!Array.isArray(feriados)) {
+            console.log('⚠️ Respuesta de feriados no es un array válido');
+            resolve(obtenerFeriadosPorDefecto(año));
+            return;
+          }
+          
           const fechasFeriados = feriados.map(feriado => feriado.fecha);
           
           // Guardar en cache
@@ -32,14 +56,22 @@ async function obtenerFeriadosChile(año) {
           console.log(`📅 Obtenidos ${fechasFeriados.length} feriados para ${año}`);
           resolve(fechasFeriados);
         } catch (error) {
-          console.error('❌ Error parseando feriados, usando lista por defecto:', error);
-          // Si falla la API, usar lista por defecto
+          console.error('❌ Error parseando feriados, usando lista por defecto:', error.message);
+          console.log('📦 Respuesta recibida:', data.substring(0, 200)); // Log parcial para debug
           resolve(obtenerFeriadosPorDefecto(año));
         }
       });
-    }).on('error', (error) => {
-      console.error('❌ Error obteniendo feriados, usando lista por defecto:', error);
-      // Si falla la API, usar lista por defecto
+    });
+
+    req.on('error', (error) => {
+      console.error('❌ Error obteniendo feriados, usando lista por defecto:', error.message);
+      resolve(obtenerFeriadosPorDefecto(año));
+    });
+
+    // Timeout después de 10 segundos
+    req.setTimeout(10000, () => {
+      console.log('⏰ Timeout obteniendo feriados, usando lista por defecto');
+      req.destroy();
       resolve(obtenerFeriadosPorDefecto(año));
     });
   });
@@ -47,6 +79,8 @@ async function obtenerFeriadosChile(año) {
 
 // Lista de feriados por defecto (por si falla la API)
 function obtenerFeriadosPorDefecto(año) {
+  console.log(`📋 Usando lista de feriados por defecto para ${año}`);
+  
   const feriadosFijos = [
     `${año}-01-01`, // Año Nuevo
     `${año}-05-01`, // Día del Trabajo
@@ -68,13 +102,15 @@ function obtenerFeriadosPorDefecto(año) {
   const feriadosMoviles = [
     sumarDias(pascua, -2), // Viernes Santo
     sumarDias(pascua, -1), // Sábado Santo
+    sumarDias(pascua, 26), // Ascensión del Señor
     sumarDias(pascua, 60), // Corpus Christi
-    sumarDias(new Date(año, 5, 29), -1), // San Pedro y San Pablo (último lunes de junio)
+    sumarDias(new Date(año, 5, 20), 1), // San Pedro y San Pablo (primer lunes después del 29 de junio)
   ];
 
   const todosFeriados = [...feriadosFijos, ...feriadosMoviles];
   feriadosCache.set(año, todosFeriados);
   
+  console.log(`✅ Lista por defecto generada con ${todosFeriados.length} feriados`);
   return todosFeriados;
 }
 
@@ -117,17 +153,22 @@ async function esDiaHabil(fecha = new Date()) {
     return false;
   }
 
-  // Obtener feriados del año
-  const feriados = await obtenerFeriadosChile(año);
+  try {
+    // Obtener feriados del año
+    const feriados = await obtenerFeriadosChile(año);
 
-  // No es hábil si es feriado
-  if (feriados.includes(fechaStr)) {
-    console.log(`🎄 ${fechaStr} es feriado, omitiendo...`);
-    return false;
+    // No es hábil si es feriado
+    if (feriados.includes(fechaStr)) {
+      console.log(`🎄 ${fechaStr} es feriado, omitiendo...`);
+      return false;
+    }
+
+    console.log(`✅ ${fechaStr} es día hábil (Lunes a Viernes y no feriado)`);
+    return true;
+  } catch (error) {
+    console.error('❌ Error verificando feriados, asumiendo día hábil:', error.message);
+    return true; // Por defecto asumir que es hábil si hay error
   }
-
-  console.log(`✅ ${fechaStr} es día hábil (Lunes a Viernes y no feriado)`);
-  return true;
 }
 
 // Función para registrar faltas automáticas diarias
@@ -186,8 +227,13 @@ exports.registrarFaltasAutomaticas = async () => {
         );
         registrosExitosos++;
       } catch (error) {
-        console.error(`❌ Error registrando falta automática para ${estudiante.run}:`, error.message);
-        registrosConError++;
+        // Si es error de duplicado, ignorar (ya fue registrado)
+        if (error.code === 'ER_DUP_ENTRY') {
+          registrosExitosos++;
+        } else {
+          console.error(`❌ Error registrando falta automática para ${estudiante.run}:`, error.message);
+          registrosConError++;
+        }
       }
     }
     
@@ -209,13 +255,13 @@ exports.iniciarProgramadorDiario = () => {
     // Ejecutar todos los días a las 6:00 AM
     cron.schedule('0 6 * * *', () => {
       console.log('⏰ Ejecutando tarea programada: registro de faltas automáticas');
-      this.registrarFaltasAutomaticas();
+      exports.registrarFaltasAutomaticas();
     });
     
     // También ejecutar al iniciar el servidor (para el día actual)
     setTimeout(() => {
       console.log('🚀 Verificando registro automático al iniciar servidor...');
-      this.registrarFaltasAutomaticas();
+      exports.registrarFaltasAutomaticas();
     }, 10000); // Esperar 10 segundos después de iniciar
     
     console.log('✅ Programador diario de faltas iniciado (6:00 AM todos los días)');
@@ -231,7 +277,7 @@ exports.iniciarProgramadorDiario = () => {
 // Función para forzar ejecución manual (para testing)
 exports.ejecutarAhora = async () => {
   console.log('🔧 Ejecutando registro manual...');
-  await this.registrarFaltasAutomaticas();
+  await exports.registrarFaltasAutomaticas();
 };
 
 // Función para verificar feriados (para testing)

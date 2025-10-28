@@ -1,14 +1,14 @@
-// models/db.js
-const mysql = require('mysql2/promise');
+const mysql = require('mysql2');
 
-const db = mysql.createPool({
-  host: 'localhost',
+const connection = mysql.createConnection({
+  host: 'mysql-zpkv.railway.internal',
   user: 'root',
-  password: '',
-  database: 'asistencia_sanviator', 
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
+  password: 'dJwFUFLOhIHftsbbrsvkPkrctjYhWbAH',
+  database: 'railway',
+  port: 3306
 });
 
-module.exports = db;
+connection.connect((error) => {
+  if (error) throw error;
+  console.log('Conectado a la BD en Railway!');
+});

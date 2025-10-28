@@ -1,26 +1,25 @@
 const mysql = require('mysql2/promise');
 
-async function connectDB() {
-  try {
-    const connection = await mysql.createConnection({
-      host: 'yamabiko.proxy.rlwy.net',
-      port: 31158,
-      user: 'root',
-      password: 'VBvoeLjziICKqyLUTGzqjtuNlsBZhtDg',
-      database: 'railway',
-      ssl: { rejectUnauthorized: false }
-    });
-    
-    console.log('✅ Conectado a Railway MySQL!');
-    
-    // Probar conexión
-    const [rows] = await connection.execute('SELECT NOW() as current_time');
-    console.log('Hora del servidor:', rows[0].current_time);
-    
-    return connection;
-  } catch (error) {
-    console.error('❌ Error de conexión:', error);
-  }
-}
+const db = mysql.createPool({
+  host: 'yamabiko.proxy.rlwy.net',
+  port: 31158,
+  user: 'root',
+  password: 'VBvoeLjziICKqyLUTGzqjtuNlsBZhtDg',
+  database: 'railway',
+  ssl: { rejectUnauthorized: false },
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+});
 
-connectDB();
+// Probar conexión al iniciar
+db.getConnection()
+  .then(connection => {
+    console.log('✅ Conectado a Railway MySQL!');
+    connection.release();
+  })
+  .catch(error => {
+    console.error('❌ Error de conexión:', error);
+  });
+
+module.exports = db;

@@ -2,11 +2,10 @@
 const mysql = require('mysql2/promise');
 
 const db = mysql.createPool({
-  host: 'sql100.infinityfree.com',      // ← CAMBIA esto
-  user: 'if0_40275564',                 // ← CAMBIA esto  
-  password: 'SkogLCij1ASmzI',           // ← CAMBIA esto
-  database: 'if0_40275564_asistencia_sanviator', // ← CAMBIA esto
-  port: 3306,                           // ← Opcional (pero recomendado)
+  host: 'localhost',
+  user: 'root',
+  password: '',
+  database: 'asistencia_sanviator', 
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0

@@ -40,7 +40,7 @@ html, body {
   border-left: 4px solid rgb(8,88,95);
 }
 
-/* Código de Barras */
+/* Código de Barras - MEJORADO */
 .barcode-section {
   margin: 15px 0;
   padding: 15px;
@@ -57,15 +57,37 @@ html, body {
 
 .barcode-container {
   background: white;
-  padding: 12px;
+  padding: 15px;
   border-radius: 6px;
   border: 2px solid #007bff;
   margin: 8px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 120px;
 }
 
 .barcode-image {
   max-width: 100%;
   height: auto;
+  display: block;
+  margin: 0 auto;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+/* Si no se genera el código de barras */
+.barcode-error {
+  text-align: center;
+  padding: 20px;
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 5px;
+  color: #856404;
+}
+
+.barcode-error p {
+  margin: 5px 0;
 }
 
 .scanner-instructions {
@@ -255,6 +277,7 @@ html, body {
 
   .barcode-container {
     padding: 10px;
+    min-height: 100px;
   }
 
   .usage-info {
@@ -276,5 +299,17 @@ html, body {
     right: 10px;
     left: 10px;
     max-width: none;
+  }
+}
+
+/* Para pantallas muy pequeñas */
+@media (max-width: 400px) {
+  .barcode-container {
+    min-height: 80px;
+    padding: 8px;
+  }
+  
+  .barcode-image {
+    max-width: 95%;
   }
 }

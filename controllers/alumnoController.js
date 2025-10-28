@@ -1,5 +1,5 @@
-const JsBarcode = require('jsbarcode');
-const { createCanvas } = require('canvas');
+// controllers/alumnoController.js
+const bwipjs = require('bwip-js');
 
 exports.dashboardAlumno = async (req, res) => {
   if (!req.session.user || req.session.user.role !== 'alumno') {
@@ -11,25 +11,33 @@ exports.dashboardAlumno = async (req, res) => {
   try {
     const rutParaBarcode = alumno.rut.replace(/[\.\-]/g, '');
     
-    const canvas = createCanvas(450, 180);
-    const ctx = canvas.getContext('2d');
+    console.log('🔧 Generando código de barras para RUT:', rutParaBarcode);
     
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    JsBarcode(canvas, rutParaBarcode, {
-      format: "CODE39",
-      width: 3,
-      height: 120,
-      displayValue: true,
-      text: alumno.rut,
-      fontSize: 18,
-      margin: 20,
-      background: "#ffffff",
-      lineColor: "#000000"
+    // Configuración optimizada para código de barras
+    const pngBuffer = await new Promise((resolve, reject) => {
+      bwipjs.toBuffer({
+        bcid: 'code128',       // Tipo de código de barras
+        text: rutParaBarcode,  // Texto a codificar
+        scale: 3,              // Tamaño
+        height: 15,            // Altura del código
+        includetext: true,     // Mostrar texto abajo
+        textxalign: 'center',  // Centrar texto
+        textsize: 13,          // Tamaño del texto
+        background: 'FFFFFF',  // Fondo blanco
+        paddingwidth: 10,      // Espacio horizontal
+        paddingheight: 5,      // Espacio vertical
+      }, (err, png) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(png);
+        }
+      });
     });
+
+    console.log('✅ Código de barras generado correctamente, tamaño:', pngBuffer.length, 'bytes');
     
-    const barcodeDataURL = canvas.toDataURL('image/png');
+    const barcodeDataURL = `data:image/png;base64,${pngBuffer.toString('base64')}`;
     
     res.render('dashboard-alumno', { 
       name: alumno.name, 
@@ -38,6 +46,13 @@ exports.dashboardAlumno = async (req, res) => {
     });
     
   } catch (err) {
-    res.status(500).send("Error generando código de barras");
+    console.error('❌ Error generando código de barras:', err);
+    
+    // En caso de error, mostrar dashboard sin código de barras
+    res.render('dashboard-alumno', { 
+      name: alumno.name, 
+      rut: alumno.rut, 
+      barcodeDataURL: null 
+    });
   }
 };

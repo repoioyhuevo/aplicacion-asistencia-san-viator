@@ -1,47 +1,59 @@
-    // models/userModel.js
-    const db = require('./db');
-    const bcrypt = require('bcryptjs');
+// models/userModel.js
+const db = require('./db');
 
-    exports.findUser = async ({ identifier, password }, role) => {
-      try {
-        if (role === 'alumno') {
-          // Buscar por RUT (ignorando puntos y guion)
-          const [rows] = await db.query(
-            `SELECT * FROM estudiantes 
-            WHERE REPLACE(REPLACE(rut, ".", ""), "-", "") = REPLACE(REPLACE(?, ".", ""), "-", "")
-            LIMIT 1`,
-            [identifier]
-          );
-          return rows.length ? rows[0] : null;
-        }
+exports.findUser = async ({ identifier, password }, role) => {
+  try {
+    console.log(`🔍 Buscando usuario: ${identifier}, rol: ${role}`);
 
-        // docente / admin
-        const [rows] = await db.query(
-          `SELECT * FROM usuarios_docentes WHERE nombre_usuario = ? LIMIT 1`,
-          [identifier]
-        );
-        if (rows.length === 0) return null;
-
-        const user = rows[0];
-        const passwordDB = user['contraseña']; // usar bracket notation por la ñ
-
-        if (!passwordDB) return null;
-
-        // 1) comparar en texto plano (por compatibilidad con filas antiguas)
-        if (password === passwordDB) return user;
-
-        // 2) comparar bcrypt (si la contraseña en DB es un hash bcrypt)
-        try {
-          const match = await bcrypt.compare(password, passwordDB);
-          if (match) return user;
-        } catch (err) {
-          // bcrypt.compare puede fallar si el hash no es bcrypt — lo ignoramos
-          console.warn('bcrypt.compare falló (no es bcrypt?):', err.message);
-        }
-
-        return null;
-      } catch (err) {
-        console.error('Error en userModel.findUser:', err);
-        return null;
+    if (role === 'alumno') {
+      // Buscar en estudiantes2
+      const [rows] = await db.query(
+        `SELECT * FROM estudiantes2 
+         WHERE REPLACE(REPLACE(run, ".", ""), "-", "") = REPLACE(REPLACE(?, ".", ""), "-", "")
+         LIMIT 1`,
+        [identifier]
+      );
+      
+      console.log(`📊 Resultados encontrados para alumno: ${rows.length}`);
+      
+      if (rows.length > 0) {
+        const alumno = rows[0];
+        console.log('✅ Alumno encontrado:', alumno);
+        return {
+          id: alumno.id,
+          nombres: alumno.nombres,
+          apellido_paterno: alumno.apellido_paterno,
+          apellido_materno: alumno.apellido_materno,
+          run: alumno.run,
+          nombre_completo: `${alumno.nombres} ${alumno.apellido_paterno} ${alumno.apellido_materno}`.trim()
+        };
       }
-    };
+    } else {
+      // CORRECCIÓN: Buscar en usuarios_docentes (la tabla correcta)
+      const [rows] = await db.query(
+        `SELECT * FROM usuarios_docentes 
+         WHERE nombre_usuario = ? AND contraseña = ?
+         LIMIT 1`,
+        [identifier, password]
+      );
+      
+      console.log(`📊 Resultados encontrados para ${role}: ${rows.length}`);
+      
+      if (rows.length > 0) {
+        const usuario = rows[0];
+        console.log('✅ Usuario encontrado:', usuario);
+        return {
+          id: usuario.id_usuario,
+          nombre_usuario: usuario.nombre_usuario,
+          nombre_completo: usuario.nombre_completo,
+          rol: usuario.rol
+        };
+      }
+    }
+
+    return null;
+  } catch (error) {
+    console.error('❌ Error en userModel.findUser:', error);
+    throw error;
+  }
+};

@@ -1,32 +1,154 @@
-<!-- views/dashboard-alumno.ejs -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Dashboard Alumno</title>
+  <title>Dashboard Alumno - San Viator</title>
   <link rel="stylesheet" href="/css/dashboard-alumno.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
 </head>
 <body>
-  <div class="alumno-card">
-    <h2>Bienvenido, <%= name %></h2>
-    <p><strong>RUT:</strong> <%= rut %></p>
+  <!-- Alerta de confirmación -->
+  <div id="alert" class="alert">
+    <span id="alert-message"></span>
+    <button class="close-alert" onclick="hideAlert()">×</button>
+  </div>
 
-    <!-- QR -->
-    <div class="qr-section">
-      <h3>Tu código QR</h3>
-      <canvas id="qr"></canvas>
+  <div class="alumno-card">
+    <div class="header">
+      <h2>Bienvenido, <%= name %></h2>
+      <p class="rut-info"><strong>RUT:</strong> <%= rut %></p>
     </div>
 
-    <a href="/logout">Cerrar sesión</a>
+    <!-- Código de Barras -->
+    <div class="barcode-section">
+      <h3>📊 Tu Código de Barras</h3>
+      <div class="barcode-container">
+        <img src="<%= barcodeDataURL %>" alt="Código de barras para registro de asistencia" class="barcode-image">
+      </div>
+      <p class="scanner-instructions">
+        📍 Muestra este código al escáner para registrar tu asistencia
+      </p>
+    </div>
+
+    <!-- Información de uso -->
+    <div class="usage-info">
+      <h4>💡 Cómo usar tu código:</h4>
+      <ul>
+        <li>Acerca el código al lector de código de barras</li>
+        <li>Mantén el código estable y bien iluminado</li>
+        <li>Escucha el sonido de confirmación</li>
+        <li>Tu asistencia se registrará automáticamente</li>
+      </ul>
+    </div>
+
+    <!-- Estado de registro -->
+    <div class="registro-status" id="registroStatus">
+      <h4>📝 Estado de Asistencia</h4>
+      <p id="statusText">Verificando estado de registro...</p>
+    </div>
+
+    <div class="actions">
+      <a href="/logout" class="btn-logout">🚪 Cerrar Sesión</a>
+    </div>
   </div>
 
   <script>
-    const qr = new QRious({
-      element: document.getElementById('qr'),
-      value: "<%= rut %>|<%= name %>",
-      size: 200
+    // Variables globales
+    let ultimoIdRegistro = null;
+    let yaNotificadoHoy = false;
+
+    // Función para mostrar alerta
+    function showAlert(message, type = 'success') {
+      const alert = document.getElementById('alert');
+      const alertMessage = document.getElementById('alert-message');
+      
+      alert.className = `alert ${type} show`;
+      alertMessage.textContent = message;
+      
+      // Ocultar automáticamente después de 5 segundos
+      setTimeout(hideAlert, 5000);
+    }
+
+    // Función para ocultar alerta
+    function hideAlert() {
+      const alert = document.getElementById('alert');
+      alert.classList.remove('show');
+    }
+
+    // Función para actualizar el estado en la interfaz
+    function actualizarEstadoRegistro(tieneRegistro, ultimoRegistro = null) {
+      const statusText = document.getElementById('statusText');
+      const registroStatus = document.getElementById('registroStatus');
+      
+      if (tieneRegistro && ultimoRegistro) {
+        // VERIFICAR SI ESTÁ PRESENTE (presente === 1)
+        if (ultimoRegistro.presente === 1) {
+          statusText.innerHTML = `✅ <strong>Asistencia registrada hoy</strong><br>
+                                 <small>Hora: ${ultimoRegistro.hora}</small>`;
+          registroStatus.style.background = '#d4edda';
+          registroStatus.style.borderLeftColor = '#28a745';
+        } else {
+          // ESTÁ AUSENTE (presente === 0)
+          statusText.innerHTML = `⏳ <strong>Esperando registro de asistencia</strong><br>
+                                 <small>Tu código está listo para escanear</small>`;
+          registroStatus.style.background = '#fff3cd';
+          registroStatus.style.borderLeftColor = '#ffc107';
+        }
+      } else {
+        // NO HAY REGISTRO
+        statusText.innerHTML = `⏳ <strong>Esperando registro de asistencia</strong><br>
+                               <small>Tu código está listo para escanear</small>`;
+        registroStatus.style.background = '#fff3cd';
+        registroStatus.style.borderLeftColor = '#ffc107';
+      }
+    }
+
+    // Función para verificar si hay registros nuevos
+    async function verificarRegistro() {
+      try {
+        const response = await fetch(`/api/alumno/ultimo-registro/<%= rut %>`);
+        const data = await response.json();
+        
+        if (data.tieneRegistro && data.ultimoRegistro) {
+          // Actualizar estado en la interfaz
+          actualizarEstadoRegistro(true, data.ultimoRegistro);
+          
+          // Verificar si es un registro NUEVO y PRESENTE (no hemos notificado)
+          if (data.ultimoRegistro.presente === 1) {
+            if (!ultimoIdRegistro || data.ultimoRegistro.id_asistencia !== ultimoIdRegistro) {
+              // Es un registro nuevo PRESENTE - mostrar alerta
+              if (!yaNotificadoHoy) {
+                showAlert('✅ ¡Asistencia registrada con éxito!', 'success');
+                yaNotificadoHoy = true;
+              }
+              
+              ultimoIdRegistro = data.ultimoRegistro.id_asistencia;
+            }
+          } else {
+            // No hay registro PRESENTE hoy
+            yaNotificadoHoy = false;
+            ultimoIdRegistro = null;
+          }
+        } else {
+          // No hay registros hoy
+          actualizarEstadoRegistro(false);
+          yaNotificadoHoy = false;
+          ultimoIdRegistro = null;
+        }
+      } catch (error) {
+        console.log('Error verificando registro:', error);
+        document.getElementById('statusText').innerHTML = 
+          '❌ <strong>Error conectando al servidor</strong>';
+      }
+    }
+
+    // Iniciar verificación cuando carga la página
+    window.addEventListener('load', function() {
+      // Verificar inmediatamente
+      verificarRegistro();
+      
+      // Verificar cada 3 segundos
+      setInterval(verificarRegistro, 3000);
     });
   </script>
 </body>

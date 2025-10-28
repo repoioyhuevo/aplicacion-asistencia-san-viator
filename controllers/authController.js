@@ -1,4 +1,3 @@
-// controllers/authController.js
 const userModel = require('../models/userModel');
 
 exports.showLogin = (req, res) => {
@@ -8,44 +7,58 @@ exports.showLogin = (req, res) => {
 
 exports.login = async (req, res) => {
   try {
-    // normalizar rol: aceptar "profesor" como alias
-    const rawRole = (req.body.role || req.query.role || 'alumno').toString().trim();
-    const role = rawRole === 'profesor' ? 'docente' : rawRole;
+    const { role } = req.body;
+    let identifier, password;
 
-    // identificar el campo que venga (nombre_usuario para docentes, rut para alumnos)
-    const identifier = (req.body.nombre_usuario || req.body.rut || '').toString().trim();
-    const password = (req.body.contraseña || req.body.password || '').toString().trim();
-
-    if (!identifier) {
-      return res.render('login', { role, error: 'Ingrese usuario o RUT' });
+    if (role === 'alumno') {
+      identifier = req.body.rut;
+      password = req.body.rut;
+    } else {
+      identifier = req.body.nombre_usuario;
+      password = req.body.contraseña;
     }
 
-    // llamar al modelo
     const user = await userModel.findUser({ identifier, password }, role);
 
     if (!user) {
-      console.log('Login fallido - usuario no encontrado o contraseña incorrecta', { role, identifier });
-      return res.render('login', { role, error: 'Usuario o contraseña inválida' });
+      return res.render('login', { 
+        role, 
+        error: 'Usuario o contraseña inválida' 
+      });
     }
 
-    // Guardar sesión (usar nombre correcto según tabla)
-    req.session.user = {
-      id: user.id_usuario || user.id_estudiante,
-      name: user.nombre || user.nombre_usuario,
-      role: role
-    };
+    if (role === 'alumno') {
+      req.session.user = {
+        id: user.id,
+        name: user.nombre_completo,
+        rut: user.run,
+        role: 'alumno'
+      };
+    } else {
+      req.session.user = {
+        id: user.id,
+        name: user.nombre_completo || user.nombre_usuario,
+        role: user.rol || 'docente'
+      };
+    }
 
-    console.log('✅ Sesión iniciada:', req.session.user);
+    if (role === 'alumno') {
+      return res.redirect('/dashboard-alumno');
+    } else {
+      return res.redirect('/dashboard-docente');
+    }
 
-    if (role === 'alumno') return res.redirect('/dashboard-alumno');
-    return res.redirect('/dashboard-docente');
-
-  } catch (err) {
-    console.error('Error en auth.login:', err);
-    return res.status(500).render('login', { role: req.body.role || 'alumno', error: 'Error interno' });
+  } catch (error) {
+    res.render('login', { 
+      role: req.body.role || 'alumno', 
+      error: 'Error interno del servidor' 
+    });
   }
 };
 
 exports.logout = (req, res) => {
-  req.session.destroy(() => res.redirect('/'));
+  req.session.destroy(() => {
+    res.clearCookie('connect.sid');
+    res.redirect('/login?role=alumno');
+  });
 };

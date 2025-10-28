@@ -1,4 +1,8 @@
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* { 
+  box-sizing: border-box; 
+  margin: 0; 
+  padding: 0; 
+}
 
 html, body {
   height: 100%;
@@ -7,85 +11,270 @@ html, body {
   display: flex;
   justify-content: center;
   align-items: center;
+  padding: 15px;
 }
 
 .alumno-card {
-  max-width: 500px;
-  width: 90%;
+  max-width: 450px;
+  width: 95%;
   background-color: white;
-  padding: 25px;
-  border-radius: 10px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   text-align: center;
 }
 
-.alumno-card h2 {
-  font-size: 24px;
-  margin-bottom: 15px;
+.header h2 {
+  font-size: 22px;
+  margin-bottom: 5px;
+  color: #333;
 }
 
-.alumno-card p {
+.rut-info {
   font-size: 16px;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  color: #555;
+  border-left: 4px solid rgb(8,88,95);
 }
 
-/* QR */
-.qr-section {
-  margin: 20px 0;
+/* Código de Barras */
+.barcode-section {
+  margin: 15px 0;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
 }
-.qr-section h3 {
+
+.barcode-section h3 {
   margin-bottom: 10px;
   font-size: 18px;
-}
-.qr-section canvas {
-  border: 3px solid #007bff;
-  border-radius: 10px;
-  padding: 5px;
-  background: #fff;
+  color: #333;
 }
 
-/* Lista de opciones */
-.alumno-card ul {
+.barcode-container {
+  background: white;
+  padding: 12px;
+  border-radius: 6px;
+  border: 2px solid #007bff;
+  margin: 8px 0;
+}
+
+.barcode-image {
+  max-width: 100%;
+  height: auto;
+}
+
+.scanner-instructions {
+  font-size: 13px;
+  color: #666;
+  margin-top: 8px;
+  padding: 8px;
+  background: #e7f3ff;
+  border-radius: 4px;
+  border-left: 3px solid #007bff;
+}
+
+/* Información de uso */
+.usage-info {
+  margin: 15px 0;
+  padding: 15px;
+  background: #fff3cd;
+  border-radius: 6px;
+  border: 1px solid #ffeaa7;
+  text-align: left;
+}
+
+.usage-info h4 {
+  color: #856404;
+  margin-bottom: 8px;
+  font-size: 15px;
+}
+
+.usage-info ul {
   list-style: none;
-  margin-top: 15px;
   padding: 0;
 }
-.alumno-card ul li {
-  background-color: rgb(8,88,95); 
+
+.usage-info ul li {
+  padding: 6px 0;
+  padding-left: 20px;
+  position: relative;
+  color: #856404;
+  font-size: 13px;
+}
+
+.usage-info ul li:before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: #28a745;
+  font-weight: bold;
+}
+
+/* Estado de registro */
+.registro-status {
+  margin: 15px 0;
   padding: 12px;
-  margin-bottom: 10px;
-  border-radius: 5px;
-  font-size: 16px;
-}
-.btn-text{
-  color:white;
+  background: #e7f3ff;
+  border-radius: 6px;
+  border-left: 4px solid #007bff;
+  text-align: left;
 }
 
-/* Botón Cerrar sesión al final */
-.alumno-card .btn-logout {
-  display: inline-block;
+.registro-status h4 {
+  margin-bottom: 8px;
+  color: #0056b3;
+  font-size: 15px;
+}
+
+#statusText {
+  color: #666;
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+/* Botones */
+.actions {
   margin-top: 20px;
-  padding: 12px 28px;
-  background: #ff4d4d;
-  color: #fff;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+}
+
+.btn-logout {
+  display: inline-block;
+  padding: 12px 24px;
+  background: #dc3545;
+  color: white;
   text-decoration: none;
-  border-radius: 5px;
-  font-size: 16px;
-  border: 2px solid #cc0000;
-  transition: background 0.2s;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: bold;
+  border: 2px solid #c82333;
 }
-.alumno-card .btn-logout:hover { background: #cc0000; }
 
-/* Responsive móvil */
+.btn-logout:hover {
+  background: #c82333;
+}
+
+/* Alertas */
+.alert {
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  padding: 12px 18px;
+  border-radius: 6px;
+  color: white;
+  font-weight: bold;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  z-index: 1000;
+  opacity: 0;
+  max-width: 300px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.alert.show {
+  opacity: 1;
+}
+
+.alert.success {
+  background: #28a745;
+  border-left: 4px solid #1e7e34;
+}
+
+.alert.error {
+  background: #dc3545;
+  border-left: 4px solid #c82333;
+}
+
+.close-alert {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.close-alert:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Estados del registro */
+.registro-status.registrado {
+  background: #d4edda;
+  border-left-color: #28a745;
+}
+
+.registro-status.esperando {
+  background: #fff3cd;
+  border-left-color: #ffc107;
+}
+
+/* Responsive */
 @media (max-width: 600px) {
-  .alumno-card { width: 95%; padding: 20px; }
+  body {
+    padding: 10px;
+  }
+  
+  .alumno-card { 
+    width: 100%; 
+    padding: 15px; 
+  }
 
-  .alumno-card h2 { font-size: 22px; }
-  .alumno-card p { font-size: 15px; }
-  .qr-section canvas { width: 280px; height: 280px; }
+  .header h2 { 
+    font-size: 20px; 
+  }
 
-  .alumno-card ul li { font-size: 15px; padding: 10px; }
-  .alumno-card .btn-logout { width: 100%; font-size: 14px; padding: 10px; }
+  .rut-info {
+    font-size: 14px;
+    padding: 8px;
+  }
+
+  .barcode-section {
+    padding: 12px;
+  }
+
+  .barcode-section h3 {
+    font-size: 16px;
+  }
+
+  .barcode-container {
+    padding: 10px;
+  }
+
+  .usage-info {
+    padding: 12px;
+  }
+
+  .usage-info ul li {
+    font-size: 12px;
+  }
+
+  .btn-logout { 
+    width: 100%; 
+    font-size: 14px; 
+    padding: 10px; 
+  }
+
+  .alert {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    max-width: none;
+  }
 }
-
-

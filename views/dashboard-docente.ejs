@@ -5,10 +5,12 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Dashboard Docente</title>
 
+  <!-- CSS -->
   <link rel="stylesheet" href="/css/dashboard-profesor.css" />
   <link rel="stylesheet" href="/css/tablas.css" />
+  <link rel="stylesheet" href="/css/modal-admin.css" />
 
-  <!-- Chart.js y plugin para etiquetas -->
+  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 
@@ -16,29 +18,8 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
-
-  <style>
-    .flatpickr-day.disabled {
-      background-color: #f1f1f1 !important;
-      color: #ccc !important;
-    }
-
-    /* Mantiene los gráficos proporcionados */
-    .chart-container {
-      position: relative;
-      width: 100%;
-      height: 350px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    canvas {
-      max-width: 100%;
-      max-height: 100%;
-    }
-  </style>
 </head>
+
 <body>
   <header>
     <div class="logo-container">
@@ -49,16 +30,20 @@
       </div>
     </div>
     <div class="header-right">
+      <span class="user-info">👤 <%= user ? user.name : '' %> (<%= user ? user.role : '' %>)</span>
       <a href="/logout" class="btn-logout">Cerrar sesión</a>
     </div>
+    <!-- En algún lugar de tu dashboard docente, agrega: -->
+    
   </header>
 
+  <!-- 🔍 FILTROS -->
   <section class="filtros">
     <div class="filtro-item">
-      <label>Fecha</label>
-      <input type="text" id="fechaInicio" placeholder="Fecha de inicio" />
+      <label>Desde</label>
+      <input type="text" id="fechaInicio" placeholder="Inicio" />
       <span>→</span>
-      <input type="text" id="fechaFin" placeholder="Fecha de fin" />
+      <input type="text" id="fechaFin" placeholder="Fin" />
     </div>
 
     <div class="filtro-item">
@@ -78,16 +63,12 @@
       </select>
     </div>
 
-    <div class="filtro-item">
-      <label>Curso</label>
-      <select id="curso">
-        <option value="todos">Todos</option>
-      </select>
-    </div>
+    
 
     <button class="btn-filtrar">Filtrar</button>
   </section>
 
+  <!-- 📊 GRAFICOS -->
   <main class="paneles">
     <div class="panel">
       <h3>Distribución de asistencias</h3>
@@ -97,13 +78,14 @@
     </div>
 
     <div class="panel">
-      <h3>Asistencias mensuales</h3>
+      <h3>Asistencias por día</h3>
       <div class="chart-container">
         <canvas id="graficoLineas"></canvas>
       </div>
     </div>
   </main>
 
+  <!-- 📋 TABLAS -->
   <section class="seccion-tablas">
     <div class="tabla-panel resumen-diario">
       <h2 class="titulo-tabla">📅 Resumen por día</h2>
@@ -140,6 +122,37 @@
     </div>
   </section>
 
-  <script src="/js/dashboard.js" defer></script>
+  <!-- 🛠️ Panel admin -->
+<% if (user && user.role === 'admin') { %>
+  <button id="abrirAdminPanel" class="btn-admin-open">⚙️</button>
+
+  <div id="adminModal" class="modal">
+    <div class="modal-content">
+      <span id="cerrarAdminPanel" class="modal-close">&times;</span>
+      <h2>🛠️ Panel de Administración</h2>
+
+      <div class="admin-section">
+        <h3>📤 Subir Alumnos desde Excel</h3>
+        <form id="uploadExcelForm" enctype="multipart/form-data">
+          <label for="excelFile">Selecciona Excel:</label>
+          <input type="file" id="excelFile" name="file" accept=".xlsx,.xls" required />
+
+          <button class="btn-admin" type="submit">Subir Archivo</button>
+        </form>
+      </div>
+      <div style="text-align: center; margin: 20px 0;">
+        <a href="/scanner" class="btn-logout" style="display: inline-flex; align-items: center; gap: 8px; background: #28a745;">
+            📟 Registrar con Lector de Código de Barras
+        </a>
+    </div>
+    </div>
+  </div>
+<% } %>
+
+
+  <!-- JS -->
+
+  <script src="/js/admin-panel.js" defer></script>
+  <script src="/js/Dashboard.js" defer></script>
 </body>
 </html>

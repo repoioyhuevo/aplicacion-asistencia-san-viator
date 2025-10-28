@@ -2,25 +2,22 @@
 const express = require('express');
 const router = express.Router();
 
-const roleController = require('../controllers/roleController');
 const authController = require('../controllers/authController');
+const alumnoController = require('../controllers/alumnoController'); // Cambiado
 const dashboardController = require('../controllers/dashboardController');
 const dataController = require('../controllers/dataController');
 
-// RUTA INICIAL - Selección de rol
-router.get('/', roleController.showRole);
-
-// LOGIN
+// === LOGIN ===
+router.get('/', authController.showLogin);
 router.get('/login', authController.showLogin);
 router.post('/login', authController.login);
 router.get('/logout', authController.logout);
 
-// DASHBOARDS
-router.get('/dashboard-alumno', dashboardController.showAlumno);
+// === DASHBOARDS ===
+router.get('/dashboard-alumno', alumnoController.dashboardAlumno); // Usar alumnoController
 router.get('/dashboard-docente', dashboardController.showDocente);
 
-// API auxiliares
+// === API auxiliares (solo estudiantes, no asistencias) ===
 router.get('/api/estudiantes', dataController.getEstudiantes);
-router.get('/api/asistencias', dataController.getAsistencias);
 
 module.exports = router;

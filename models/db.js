@@ -1,11 +1,14 @@
+// models/db.js
 const mysql = require('mysql2/promise');
 
 const db = mysql.createPool({
-  host: 'metro.proxy.rlwy.net',
+  host: 'localhost',
   user: 'root',
-  password: 'qdXolISyQKPsirNDaExgbNhboFnowhOW',
-  database: 'railway',
-  port: 13787
+  password: '',
+  database: 'asistencia_sanviator', 
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
 });
 
 module.exports = db;

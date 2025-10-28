@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Asistencia - Colegio San Viator</title>
+    <link rel="stylesheet" href="/css/scanner.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📱 REGISTRO DE ASISTENCIA</h1>
+            <p class="subtitle">Colegio San Viator</p>
+        </div>
+        
+        <div class="content">
+            <div class="scanner-area" id="scannerBox">
+                <div class="scanner-icon">🎯</div>
+                <div class="instructions">LISTO PARA ESCANEAR</div>
+                <div class="sub-instructions">Conecte el lector de código de barras y comience a escanear</div>
+                <input type="text" id="codigoInput" autofocus placeholder="El código aparecerá aquí automáticamente">
+                <div class="sub-instructions" style="margin-top: 20px;">
+                    💡 El campo de entrada está oculto pero activo
+                </div>
+            </div>
+            
+            <div class="status-container">
+                <div class="status info" id="status">
+                    <div class="loading"></div>
+                    Sistema inicializado - Esperando código de barras...
+                </div>
+            </div>
+            
+            <div class="counter" id="counter">
+                📊 Registros exitosos hoy: <span id="count">0</span>
+            </div>
+
+            <!-- LISTA DE REGISTROS DEL DÍA -->
+            <div class="registros-hoy">
+                <h3>📋 Registros de Hoy</h3>
+                <div class="lista-registros" id="listaRegistros">
+                    <div class="vacio">Cargando registros...</div>
+                </div>
+            </div>
+            
+            <div class="footer">
+                <p>📍 Mantenga esta ventana abierta para registro continuo</p>
+                <p>🔊 Se reproducirá un sonido en cada registro exitoso</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let registroCount = 0;
+        const codigoInput = document.getElementById('codigoInput');
+        const scannerBox = document.getElementById('scannerBox');
+        const statusDiv = document.getElementById('status');
+        const countSpan = document.getElementById('count');
+        const listaRegistros = document.getElementById('listaRegistros');
+
+        // Enfocar automáticamente al cargar
+        window.addEventListener('load', function() {
+            codigoInput.focus();
+            mostrarEstado('info', '✅ Sistema listo - Escanee códigos de barras');
+            cargarRegistrosHoy(); // Cargar registros al iniciar
+        });
+
+        // Detectar cuando se escanea un código (Enter)
+        codigoInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const codigo = this.value.trim();
+                if (codigo) {
+                    procesarCodigo(codigo);
+                    this.value = '';
+                }
+            }
+        });
+
+        // También detectar cambios (por si el lector no envía Enter)
+        let timeoutId;
+        codigoInput.addEventListener('input', function() {
+            clearTimeout(timeoutId);
+            const codigo = this.value.trim();
+            
+            // Si parece un RUT (8-12 caracteres)
+            if (codigo.length >= 8 && codigo.length <= 12) {
+                timeoutId = setTimeout(() => {
+                    procesarCodigo(codigo);
+                    this.value = '';
+                }, 150);
+            }
+        });
+
+        // Función para procesar el código
+        async function procesarCodigo(codigo) {
+            scannerBox.classList.add('active');
+            mostrarEstado('info', '🔄 Procesando código de barras...');
+            
+            try {
+                const response = await fetch('/api/barcode/registrar-asistencia', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ codigoBarras: codigo })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    if (data.yaRegistrado) {
+                        mostrarEstado('info', `⚠️ ${data.estudiante.nombre} - Ya estaba registrado hoy`);
+                    } else {
+                        registroCount++;
+                        countSpan.textContent = registroCount;
+                        mostrarEstado('success', `✅ ASISTENCIA REGISTRADA: ${data.estudiante.nombre}`);
+                        // Actualizar la lista después de un registro exitoso
+                        setTimeout(cargarRegistrosHoy, 500);
+                    }
+                    playBeep();
+                } else {
+                    mostrarEstado('error', `❌ ERROR: ${data.message}`);
+                }
+            } catch (error) {
+                mostrarEstado('error', '❌ Error de conexión con el servidor');
+            }
+            
+            // Restaurar estado después de 3 segundos
+            setTimeout(() => {
+                scannerBox.classList.remove('active');
+                mostrarEstado('info', '✅ Listo para escanear siguiente código');
+                codigoInput.focus();
+            }, 3000);
+        }
+
+        // Función para cargar los registros del día
+        async function cargarRegistrosHoy() {
+            try {
+                const response = await fetch('/api/barcode/registros-hoy');
+                const data = await response.json();
+                
+                if (data.success) {
+                    actualizarListaRegistros(data.registros);
+                    countSpan.textContent = data.total;
+                    registroCount = data.total;
+                } else {
+                    listaRegistros.innerHTML = '<div class="vacio">Error al cargar registros</div>';
+                }
+            } catch (error) {
+                listaRegistros.innerHTML = '<div class="vacio">Error de conexión</div>';
+            }
+        }
+
+        // Función para actualizar la lista de registros
+        function actualizarListaRegistros(registros) {
+            if (!registros || registros.length === 0) {
+                listaRegistros.innerHTML = '<div class="vacio">No hay registros para hoy</div>';
+                return;
+            }
+
+            const html = registros.map(registro => `
+                <div class="registro-item">
+                    <div class="registro-nombre">${registro.nombre_completo}</div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span class="registro-rut">${registro.run}</span>
+                        <span class="registro-hora">${registro.hora}</span>
+                    </div>
+                </div>
+            `).join('');
+
+            listaRegistros.innerHTML = html;
+        }
+
+        // Mostrar estado
+        function mostrarEstado(tipo, mensaje) {
+            statusDiv.className = 'status ' + tipo;
+            statusDiv.innerHTML = mensaje;
+        }
+
+        // Sonido de confirmación mejorado
+        function playBeep() {
+            try {
+                // Crear contexto de audio
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                // Configurar sonido
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+                
+                // Configurar volumen (fade in/out)
+                gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.1);
+                gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.3);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.3);
+            } catch (e) {
+                // Silencio si no funciona el audio
+                console.log('Audio no disponible');
+            }
+        }
+
+        // Mantener el foco siempre en el input
+        document.addEventListener('click', function() {
+            codigoInput.focus();
+        });
+
+        // Prevenir que se pierda el foco
+        document.addEventListener('focusout', function() {
+            setTimeout(() => {
+                codigoInput.focus();
+            }, 100);
+        });
+
+        // Actualizar lista cada 30 segundos por si hay cambios externos
+        setInterval(cargarRegistrosHoy, 30000);
+
+        // Indicar que la página está activa
+        console.log('🎯 Scanner de asistencia inicializado correctamente');
+        console.log('📍 Campo de entrada siempre enfocado');
+        console.log('📱 Listo para recibir códigos de barras');
+    </script>
+</body>
+</html>

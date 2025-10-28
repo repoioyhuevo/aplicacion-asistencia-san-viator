@@ -1,22 +1,31 @@
-exports.showAlumno = (req, res) => {
-  if (!req.session.user || req.session.user.role !== 'alumno')
-    return res.redirect('/login?role=alumno');
+// controllers/dashboardController.js
+const db = require('../models/db');
 
-  res.render('dashboard-alumno', { name: req.session.user.name });
-};
+exports.showDocente = async (req, res) => {
+  try {
+    if (!req.session.user || (req.session.user.role !== 'docente' && req.session.user.role !== 'admin')) {
+      return res.redirect('/login?role=docente');
+    }
 
-exports.showDocente = (req, res) => {
-  if (!req.session.user || (req.session.user.role !== 'docente' && req.session.user.role !== 'admin'))
-    return res.redirect('/login?role=docente');
+    const user = req.session.user;
 
-  res.render('dashboard-docente', { name: req.session.user.name });
-};
-exports.showAlumno = (req, res) => {
-  if (!req.session.user || req.session.user.role !== 'alumno')
-    return res.redirect('/login?role=alumno');
+    const [cursos] = await db.query(
+      `SELECT DISTINCT nivel, letra, descripcion FROM cursos 
+       WHERE descripcion NOT LIKE '%Transición%'
+       ORDER BY nivel, letra`
+    );
 
-  res.render('dashboard-alumno', { 
-    name: req.session.user.name,
-    rut: req.session.user.rut // ✅ agregamos rut
-  });
+    res.render("dashboard-docente", {
+      user,
+      niveles: [
+        { nivel: "Parvularia" },
+        { nivel: "Básica" },
+        { nivel: "Media" }
+      ],
+      grados: [],
+      cursos: cursos || []
+    });
+  } catch (err) {
+    res.status(500).send("Error al cargar el dashboard del docente.");
+  }
 };

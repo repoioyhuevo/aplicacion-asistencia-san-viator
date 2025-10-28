@@ -1,0 +1,81 @@
+/* Fondo del modal */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  backdrop-filter: blur(5px);
+  background: rgba(0, 0, 0, 0.4);
+  justify-content: center;
+  align-items: center;
+  animation: fadeIn 0.2s ease-in-out;
+}
+.modal.visible { display: flex !important; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* Contenido del modal */
+.modal-content {
+  background-color: #fff;
+  padding: 25px;
+  border-radius: 14px;
+  width: 90%;
+  max-width: 700px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  animation: slideIn 0.3s ease;
+  overflow-y: auto;
+  max-height: 90vh;
+}
+
+@keyframes slideIn { from { transform: translateY(-20px); opacity:0; } to { transform: translateY(0); opacity:1; } }
+
+/* Botón de cierre */
+.modal-close {
+  float: right;
+  font-size: 25px;
+  font-weight: bold;
+  cursor: pointer;
+  color: #333;
+  transition: color 0.2s;
+}
+.modal-close:hover { color: red; }
+
+/* Botón flotante de abrir */
+.btn-admin-open {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  font-size: 26px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+  transition: transform 0.2s, background 0.3s;
+}
+.btn-admin-open:hover { background: #0056b3; transform: scale(1.1); }
+
+/* Secciones dentro del panel */
+.admin-section {
+  margin-top: 20px;
+  padding-top: 10px;
+  border-top: 1px solid #ddd;
+}
+.admin-section h3 { margin-bottom: 10px; }
+
+.btn-admin {
+  background: #28a745;
+  color: #fff;
+  padding: 8px 15px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.btn-admin:hover { background: #218838; }

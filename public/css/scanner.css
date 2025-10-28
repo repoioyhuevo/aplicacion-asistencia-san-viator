@@ -1,0 +1,318 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: rgb(255,222,106);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 15px;
+}
+
+.container {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    overflow: hidden;
+    width: 100%;
+    max-width: 700px;
+    text-align: center;
+}
+
+.header {
+    background: #08585f;
+    color: white;
+    padding: 20px;
+    border-bottom: 4px solid #ffde6a;
+}
+
+.header h1 {
+    font-size: 28px;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.header .subtitle {
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.content {
+    padding: 25px;
+}
+
+.scanner-area {
+    border: 3px dashed #08585f;
+    border-radius: 10px;
+    padding: 25px 15px;
+    margin: 20px 0;
+    background: #f8f9fa;
+    cursor: pointer;
+}
+
+.scanner-icon {
+    font-size: 40px;
+    margin-bottom: 10px;
+    color: #08585f;
+}
+
+.instructions {
+    font-size: 18px;
+    color: #08585f;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.sub-instructions {
+    color: #666;
+    font-size: 13px;
+    margin-bottom: 15px;
+}
+
+.scan-button {
+    background: #08585f;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 8px;
+}
+
+.scan-button:hover {
+    background: #063c41;
+}
+
+#codigoInput {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    text-align: center;
+    margin: 12px 0;
+    opacity: 0;
+    height: 1px;
+    position: absolute;
+    left: -1000px;
+}
+
+.status-container {
+    margin: 20px 0;
+}
+
+.status {
+    padding: 15px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-left: 4px solid;
+}
+
+.status.info {
+    background: #e3f2fd;
+    color: #0c5460;
+    border-left-color: #17a2b8;
+}
+
+.status.success {
+    background: #d4edda;
+    color: #155724;
+    border-left-color: #28a745;
+}
+
+.status.error {
+    background: #f8d7da;
+    color: #721c24;
+    border-left-color: #dc3545;
+}
+
+.counter {
+    background: #08585f;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: bold;
+    display: inline-block;
+    margin-top: 12px;
+}
+
+.registros-hoy {
+    margin-top: 20px;
+    text-align: left;
+}
+
+.registros-hoy h3 {
+    color: #08585f;
+    margin-bottom: 12px;
+    font-size: 18px;
+    text-align: center;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #ffde6a;
+}
+
+.lista-registros {
+    max-height: 250px;
+    overflow-y: auto;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 12px;
+    background: #f8f9fa;
+}
+
+.registro-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    border-bottom: 1px solid #dee2e6;
+    background: white;
+    margin-bottom: 6px;
+    border-radius: 6px;
+}
+
+.registro-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.registro-nombre {
+    font-weight: bold;
+    color: #08585f;
+    flex: 1;
+}
+
+.registro-hora {
+    color: #666;
+    font-size: 13px;
+    background: #e9ecef;
+    padding: 3px 6px;
+    border-radius: 3px;
+}
+
+.registro-rut {
+    color: #888;
+    font-size: 11px;
+    margin-right: 12px;
+}
+
+.vacio {
+    text-align: center;
+    color: #666;
+    font-style: italic;
+    padding: 15px;
+}
+
+.footer {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+    color: #666;
+    font-size: 13px;
+}
+
+/* Scroll simple */
+.lista-registros::-webkit-scrollbar {
+    width: 6px;
+}
+
+.lista-registros::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.lista-registros::-webkit-scrollbar-thumb {
+    background: #08585f;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .container {
+        margin: 10px;
+        max-width: 95%;
+    }
+    
+    .header {
+        padding: 15px;
+    }
+    
+    .header h1 {
+        font-size: 24px;
+    }
+    
+    .content {
+        padding: 20px;
+    }
+    
+    .scanner-area {
+        padding: 20px 12px;
+    }
+    
+    .instructions {
+        font-size: 16px;
+    }
+    
+    .status {
+        font-size: 14px;
+        padding: 12px;
+        min-height: 50px;
+    }
+    
+    .registro-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+    
+    .registro-hora {
+        align-self: flex-end;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 10px;
+    }
+    
+    .header {
+        padding: 12px;
+    }
+    
+    .header h1 {
+        font-size: 22px;
+    }
+    
+    .content {
+        padding: 15px;
+    }
+    
+    .scanner-area {
+        padding: 15px 10px;
+    }
+    
+    .instructions {
+        font-size: 15px;
+    }
+    
+    .status {
+        font-size: 13px;
+        padding: 10px;
+        min-height: 45px;
+    }
+    
+    .counter {
+        font-size: 13px;
+        padding: 8px 16px;
+    }
+}

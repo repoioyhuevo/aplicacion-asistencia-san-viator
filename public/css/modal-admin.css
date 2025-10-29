@@ -17,16 +17,22 @@
 
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-/* Contenido del modal */
+/* Contenido del modal - AHORA MÁS GRANDE */
 .modal-content {
   background-color: #fff;
   padding: 25px;
   border-radius: 14px;
-  width: 90%;
-  max-width: 700px;
+  width: 95%;
+  max-width: 1200px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   animation: slideIn 0.3s ease;
   overflow-y: auto;
+  max-height: 90vh;
+}
+
+.admin-modal-large {
+  max-width: 95%;
+  width: 95%;
   max-height: 90vh;
 }
 
@@ -51,31 +57,430 @@
   background: #007bff;
   color: white;
   border: none;
-  border-radius: 50%;
-  width: 60px;
-  height: 60px;
-  font-size: 26px;
+  border-radius: 50px;
+  padding: 15px 25px;
+  font-size: 16px;
   cursor: pointer;
   box-shadow: 0 4px 10px rgba(0,0,0,0.25);
   transition: transform 0.2s, background 0.3s;
+  z-index: 9998;
 }
-.btn-admin-open:hover { background: #0056b3; transform: scale(1.1); }
+.btn-admin-open:hover { 
+  background: #0056b3; 
+  transform: scale(1.05); 
+}
 
 /* Secciones dentro del panel */
 .admin-section {
   margin-top: 20px;
-  padding-top: 10px;
-  border-top: 1px solid #ddd;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
 }
-.admin-section h3 { margin-bottom: 10px; }
+.admin-section h3 { 
+  margin-bottom: 15px; 
+  color: #333;
+  font-size: 1.4em;
+}
 
 .btn-admin {
   background: #28a745;
   color: #fff;
-  padding: 8px 15px;
+  padding: 10px 20px;
   border: none;
   border-radius: 8px;
   cursor: pointer;
   transition: 0.2s;
+  font-size: 14px;
+  font-weight: 500;
 }
-.btn-admin:hover { background: #218838; }
+.btn-admin:hover { 
+  background: #218838; 
+  transform: translateY(-2px);
+}
+
+.btn-admin.btn-large {
+  padding: 15px 30px;
+  font-size: 16px;
+  margin: 20px 0;
+}
+
+/* ========== PESTAÑAS ========== */
+.admin-tabs {
+  display: flex;
+  border-bottom: 2px solid #ddd;
+  margin-bottom: 20px;
+  background: #f8f9fa;
+  border-radius: 8px 8px 0 0;
+  overflow-x: auto;
+}
+
+.tab-button {
+  padding: 12px 24px;
+  background: #f8f9fa;
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 120px;
+  text-align: center;
+}
+
+.tab-button.active {
+  background: #fff;
+  border-bottom-color: #007bff;
+  color: #007bff;
+  font-weight: 600;
+}
+
+.tab-button:hover {
+  background: #e9ecef;
+  color: #0056b3;
+}
+
+.tab-content {
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.tab-pane {
+  display: none;
+  animation: fadeIn 0.3s ease;
+}
+
+.tab-pane.active {
+  display: block;
+}
+
+/* ========== FORMULARIOS ADMIN ========== */
+.form-container {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border-left: 4px solid #007bff;
+}
+
+.form-container h4 {
+  margin-bottom: 15px;
+  color: #333;
+  font-size: 1.2em;
+}
+
+.form-row {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+}
+
+.form-row input, 
+.form-row select {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  min-width: 200px;
+  transition: border-color 0.3s;
+}
+
+.form-row input:focus, 
+.form-row select:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+/* ========== TABLAS ADMIN ========== */
+.table-container {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-top: 15px;
+}
+
+.table-container h4 {
+  padding: 15px 20px;
+  background: #f8f9fa;
+  margin: 0;
+  color: #333;
+  font-size: 1.1em;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.admin-table th {
+  background: #f8f9fa;
+  font-weight: 600;
+  color: #495057;
+  position: sticky;
+  top: 0;
+}
+
+.admin-table tr:hover {
+  background: #f8f9fa;
+}
+
+.admin-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* ========== BOTONES ADMIN ========== */
+.btn-admin-small {
+  padding: 8px 12px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s;
+  margin: 2px;
+}
+
+.btn-admin-small:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.btn-success {
+  background: #28a745;
+}
+
+.btn-success:hover {
+  background: #1e7e34;
+}
+
+.btn-danger {
+  background: #dc3545;
+}
+
+.btn-danger:hover {
+  background: #c82333;
+}
+
+.btn-warning {
+  background: #ffc107;
+  color: #212529;
+}
+
+.btn-warning:hover {
+  background: #e0a800;
+}
+
+/* ========== FILTROS ALUMNOS ========== */
+.filtros-alumnos {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 6px;
+}
+
+.filtros-alumnos input,
+.filtros-alumnos select {
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  flex: 1;
+  min-width: 150px;
+}
+
+.filtros-alumnos input {
+  flex: 2;
+  min-width: 250px;
+}
+
+/* ========== ESTADOS ========== */
+.estado-activo {
+  color: #28a745;
+  font-weight: 500;
+  background: #d4edda;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+.estado-inactivo {
+  color: #dc3545;
+  font-weight: 500;
+  background: #f8d7da;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+/* ========== INFORMACIÓN ADMIN ========== */
+.admin-info {
+  background: #e7f3ff;
+  padding: 15px;
+  border-radius: 6px;
+  border-left: 4px solid #007bff;
+  margin-bottom: 20px;
+  color: #004085;
+}
+
+.admin-info p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ========== LOADING STATES ========== */
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.loading::after {
+  content: " ⏳";
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 768px) {
+  .modal-content,
+  .admin-modal-large {
+    max-width: 98%;
+    width: 98%;
+    padding: 15px;
+    margin: 10px;
+  }
+  
+  .form-row {
+    flex-direction: column;
+  }
+  
+  .form-row input, 
+  .form-row select {
+    min-width: 100%;
+  }
+  
+  .filtros-alumnos {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .filtros-alumnos input,
+  .filtros-alumnos select {
+    min-width: 100%;
+  }
+  
+  .admin-tabs {
+    flex-wrap: wrap;
+  }
+  
+  .tab-button {
+    flex: 1;
+    min-width: 120px;
+    font-size: 12px;
+    padding: 10px 12px;
+  }
+  
+  .admin-table {
+    font-size: 12px;
+  }
+  
+  .admin-table th,
+  .admin-table td {
+    padding: 8px 10px;
+  }
+  
+  .btn-admin-open {
+    bottom: 10px;
+    right: 10px;
+    padding: 12px 20px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .tab-button {
+    min-width: 100px;
+    font-size: 11px;
+    padding: 8px 10px;
+  }
+  
+  .admin-table {
+    display: block;
+    overflow-x: auto;
+  }
+  
+  .form-container {
+    padding: 15px;
+  }
+}
+
+/* ========== UTILIDADES ========== */
+.text-center {
+  text-align: center;
+}
+
+.text-success {
+  color: #28a745;
+}
+
+.text-danger {
+  color: #dc3545;
+}
+
+.text-warning {
+  color: #ffc107;
+}
+
+.mt-20 {
+  margin-top: 20px;
+}
+
+.mb-20 {
+  margin-bottom: 20px;
+}
+
+.p-20 {
+  padding: 20px;
+}
+
+/* Scrollbar personalizado */
+.tab-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.tab-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.tab-content::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.tab-content::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}

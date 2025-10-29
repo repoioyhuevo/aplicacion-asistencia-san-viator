@@ -15,6 +15,9 @@
   
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- Font Awesome para íconos -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
 <body>
@@ -123,25 +126,196 @@
 
   <!-- 🛠️ Panel admin -->
   <% if (user && user.role === 'admin') { %>
-    <button id="abrirAdminPanel" class="btn-admin-open">⚙️</button>
+    <button id="abrirAdminPanel" class="btn-admin-open">⚙️ Panel Admin</button>
 
     <div id="adminModal" class="modal">
-      <div class="modal-content">
+      <div class="modal-content admin-modal-large">
         <span id="cerrarAdminPanel" class="modal-close">&times;</span>
         <h2>🛠️ Panel de Administración</h2>
 
-        <div class="admin-section">
-          <h3>📤 Subir Alumnos desde Excel</h3>
-          <form id="uploadExcelForm" enctype="multipart/form-data">
-            <label for="excelFile">Selecciona Excel:</label>
-            <input type="file" id="excelFile" name="file" accept=".xlsx,.xls" required />
-            <button class="btn-admin" type="submit">Subir Archivo</button>
-          </form>
+        <!-- Pestañas para las diferentes secciones -->
+        <div class="admin-tabs">
+          <button class="tab-button active" data-tab="excel">📤 Excel</button>
+          <button class="tab-button" data-tab="docentes">👨‍🏫 Docentes</button>
+          <button class="tab-button" data-tab="alumnos">👥 Alumnos</button>
+          <button class="tab-button" data-tab="bloqueos">🚫 Bloqueos</button>
+          <button class="tab-button" data-tab="scanner">📟 Scanner</button>
         </div>
-        <div style="text-align: center; margin: 20px 0;">
-          <a href="/scanner" class="btn-logout" style="display: inline-flex; align-items: center; gap: 8px; background: #28a745;">
-            📟 Registrar con Lector de Código de Barras
-          </a>
+
+        <!-- Contenido de pestañas -->
+        <div class="tab-content">
+          <!-- Pestaña Excel -->
+          <div id="tab-excel" class="tab-pane active">
+            <div class="admin-section">
+              <h3>📤 Subir Alumnos desde Excel</h3>
+              <form id="uploadExcelForm" enctype="multipart/form-data">
+                <label for="excelFile">Selecciona archivo Excel:</label>
+                <input type="file" id="excelFile" name="file" accept=".xlsx,.xls" required />
+                <button class="btn-admin" type="submit">
+                  <i class="fas fa-upload"></i> Subir Archivo
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <!-- Pestaña Docentes -->
+          <div id="tab-docentes" class="tab-pane">
+            <div class="admin-section">
+              <h3>👨‍🏫 Gestión de Docentes</h3>
+              
+              <!-- Formulario para agregar docente -->
+              <div class="form-container">
+                <h4>Agregar Nuevo Docente</h4>
+                <form id="formDocente">
+                  <div class="form-row">
+                    <input type="text" id="docenteUsuario" placeholder="Nombre de usuario" required>
+                    <input type="password" id="docentePassword" placeholder="Contraseña" required>
+                  </div>
+                  <div class="form-row">
+                    <input type="text" id="docenteNombre" placeholder="Nombre completo" required>
+                    <input type="email" id="docenteCorreo" placeholder="Correo electrónico">
+                  </div>
+                  <button type="submit" class="btn-admin">
+                    <i class="fas fa-plus"></i> Agregar Docente
+                  </button>
+                </form>
+              </div>
+
+              <!-- Lista de docentes -->
+              <div class="table-container">
+                <h4>Docentes Registrados</h4>
+                <table id="tablaDocentes" class="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Usuario</th>
+                      <th>Nombre</th>
+                      <th>Correo</th>
+                      <th>Estado</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbodyDocentes">
+                    <tr><td colspan="5" style="text-align:center;">Cargando docentes...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pestaña Alumnos -->
+          <div id="tab-alumnos" class="tab-pane">
+            <div class="admin-section">
+              <h3>👥 Gestión de Alumnos</h3>
+              
+              <!-- Filtros para alumnos -->
+              <div class="filtros-alumnos">
+                <input type="text" id="buscarAlumno" placeholder="Buscar por RUT o nombre...">
+                <select id="filtroCursoAlumno">
+                  <option value="todos">Todos los cursos</option>
+                </select>
+                <select id="filtroNivelAlumno">
+                  <option value="todos">Todos los niveles</option>
+                  <option value="Parvularia">Parvularia</option>
+                  <option value="Básica">Básica</option>
+                  <option value="Media">Media</option>
+                </select>
+                <button id="btnFiltrarAlumnos" class="btn-admin-small">
+                  <i class="fas fa-search"></i> Filtrar
+                </button>
+                <button id="btnNuevoAlumno" class="btn-admin-small btn-success">
+                  <i class="fas fa-plus"></i> Nuevo Alumno
+                </button>
+              </div>
+
+              <!-- Lista de alumnos -->
+              <div class="table-container">
+                <table id="tablaAlumnos" class="admin-table">
+                  <thead>
+                    <tr>
+                      <th>RUT</th>
+                      <th>Nombre Completo</th>
+                      <th>Curso</th>
+                      <th>Estado</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbodyAlumnos">
+                    <tr><td colspan="5" style="text-align:center;">Cargando alumnos...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pestaña Bloqueos -->
+          <div id="tab-bloqueos" class="tab-pane">
+            <div class="admin-section">
+              <h3>🚫 Gestión de Bloqueos</h3>
+              <p class="admin-info">Configura días específicos donde no se registrarán faltas automáticas para ciertos cursos.</p>
+              
+              <!-- Formulario para agregar bloqueo -->
+              <div class="form-container">
+                <h4>Agregar Nuevo Bloqueo</h4>
+                <form id="formBloqueo">
+                  <div class="form-row">
+                    <select id="bloqueoCurso" required>
+                      <option value="">Seleccionar curso</option>
+                    </select>
+                    <select id="bloqueoTipo">
+                      <option value="dia_semana">Día de la semana</option>
+                      <option value="fecha_especifica">Fecha específica</option>
+                    </select>
+                  </div>
+                  <div class="form-row">
+                    <select id="bloqueoDiaSemana">
+                      <option value="1">Lunes</option>
+                      <option value="2">Martes</option>
+                      <option value="3">Miércoles</option>
+                      <option value="4">Jueves</option>
+                      <option value="5">Viernes</option>
+                    </select>
+                    <input type="date" id="bloqueoFechaEspecifica" style="display:none;">
+                  </div>
+                  <div class="form-row">
+                    <input type="text" id="bloqueoMotivo" placeholder="Motivo del bloqueo (ej: No almuerzan los jueves)" required>
+                  </div>
+                  <button type="submit" class="btn-admin">
+                    <i class="fas fa-lock"></i> Agregar Bloqueo
+                  </button>
+                </form>
+              </div>
+
+              <!-- Lista de bloqueos activos -->
+              <div class="table-container">
+                <h4>Bloqueos Activos</h4>
+                <table id="tablaBloqueos" class="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Curso</th>
+                      <th>Tipo</th>
+                      <th>Día/Fecha</th>
+                      <th>Motivo</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbodyBloqueos">
+                    <tr><td colspan="5" style="text-align:center;">Cargando bloqueos...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pestaña Scanner -->
+          <div id="tab-scanner" class="tab-pane">
+            <div class="admin-section" style="text-align: center;">
+              <h3>📟 Lector de Código de Barras</h3>
+              <p>Accede al sistema de registro de asistencia por código de barras</p>
+              <a href="/scanner" class="btn-admin btn-large">
+                <i class="fas fa-barcode"></i> Ir al Lector de Códigos
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -152,5 +326,8 @@
   <script src="/vendor/flatpickr/es.js"></script>
   <script src="/js/dashboard.js"></script>
   <script src="/js/admin-panel.js"></script>
+  
+  <!-- Nuevo JS para la gestión admin -->
+  <script src="/js/admin-management.js"></script>
 </body>
 </html>

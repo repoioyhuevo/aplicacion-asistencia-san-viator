@@ -6,7 +6,8 @@ const db = require('./models/db');
 const barcodeController = require('./controllers/barcodeController');
 
 const app = express();
-
+const adminController = require('./controllers/adminController');
+adminController.crearTablaBloqueos();
 // Configuración
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));

@@ -5,7 +5,7 @@ class Dashboard {
     this.graficoLineas = null;
     this.flatpickrInicio = null;
     this.flatpickrFin = null;
-    this.todosLosGrados = []; // Para almacenar todos los grados
+    this.todosLosGrados = [];
     this.init();
   }
 
@@ -17,27 +17,68 @@ class Dashboard {
   }
 
   configurarFiltros() {
-    // Configurar Flatpickr para fechas
-    this.flatpickrInicio = flatpickr("#fechaInicio", {
-      locale: "es",
-      dateFormat: "Y-m-d",
-      defaultDate: "2025-10-01",
-      onChange: (selectedDates, dateStr) => {
-        console.log('📅 Fecha inicio cambiada:', dateStr);
+    try {
+      // Verificar si Flatpickr está disponible
+      if (typeof flatpickr === 'undefined') {
+        console.warn('⚠️ Flatpickr no está disponible, usando inputs nativos');
+        this.usarInputsNativos();
+        return;
       }
-    });
 
-    this.flatpickrFin = flatpickr("#fechaFin", {
-      locale: "es",
-      dateFormat: "Y-m-d", 
-      defaultDate: "2025-10-10",
-      onChange: (selectedDates, dateStr) => {
-        console.log('📅 Fecha fin cambiada:', dateStr);
-      }
-    });
+      // Configurar Flatpickr para fechas - CONFIGURACIÓN CORREGIDA
+      this.flatpickrInicio = flatpickr("#fechaInicio", {
+        locale: "es",
+        dateFormat: "Y-m-d",
+        defaultDate: new Date().toISOString().split('T')[0],
+        allowInput: true,
+        clickOpens: true,
+        static: true,
+        monthSelectorType: 'static',
+        onChange: (selectedDates, dateStr) => {
+          console.log('📅 Fecha inicio cambiada:', dateStr);
+        }
+      });
 
-    // Cargar solo grados (sin cursos)
+      this.flatpickrFin = flatpickr("#fechaFin", {
+        locale: "es",
+        dateFormat: "Y-m-d", 
+        defaultDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        allowInput: true,
+        clickOpens: true,
+        static: true,
+        monthSelectorType: 'static',
+        onChange: (selectedDates, dateStr) => {
+          console.log('📅 Fecha fin cambiada:', dateStr);
+        }
+      });
+
+      console.log('✅ Flatpickr configurado correctamente');
+    } catch (error) {
+      console.error('❌ Error configurando Flatpickr:', error);
+      this.usarInputsNativos();
+    }
+
     this.cargarGrados();
+  }
+
+  usarInputsNativos() {
+    // Fallback a inputs de fecha nativos
+    const fechaInicio = document.getElementById('fechaInicio');
+    const fechaFin = document.getElementById('fechaFin');
+    
+    if (fechaInicio && fechaFin) {
+      fechaInicio.type = 'date';
+      fechaFin.type = 'date';
+      
+      // Establecer fechas por defecto
+      const hoy = new Date();
+      const enUnaSemana = new Date(hoy.getTime() + 7 * 24 * 60 * 60 * 1000);
+      
+      fechaInicio.value = hoy.toISOString().split('T')[0];
+      fechaFin.value = enUnaSemana.toISOString().split('T')[0];
+      
+      console.log('✅ Usando inputs de fecha nativos');
+    }
   }
 
   validarYRangoFechas(fechaInicio, fechaFin) {
@@ -66,39 +107,51 @@ class Dashboard {
 
   async cargarGrados() {
     try {
+      console.log('📚 Cargando grados desde API...');
       const response = await fetch('/api/asistencias/grados');
+      
+      if (!response.ok) {
+        throw new Error(`Error HTTP: ${response.status}`);
+      }
+      
       const grados = await response.json();
       
       // Guardar todos los grados para filtrado posterior
-      this.todosLosGrados = grados;
+      this.todosLosGrados = Array.isArray(grados) ? grados : [];
       
       this.actualizarFiltroGrados();
-      console.log('✅ Todos los grados cargados:', this.todosLosGrados);
+      console.log('✅ Grados cargados:', this.todosLosGrados.length);
     } catch (error) {
-      console.error('Error cargando grados:', error);
+      console.error('❌ Error cargando grados:', error);
       // Cargar grados por defecto si falla la API
       this.cargarGradosPorDefecto();
     }
   }
 
   actualizarFiltroGrados() {
-    const nivelSeleccionado = document.getElementById('nivel').value;
+    const nivelSeleccionado = document.getElementById('nivel');
     const selectGrado = document.getElementById('grado');
+    
+    if (!nivelSeleccionado || !selectGrado) {
+      console.error('❌ Elementos del DOM no encontrados');
+      return;
+    }
     
     // Limpiar select
     selectGrado.innerHTML = '<option value="todos">Todos los grados</option>';
     
     // Filtrar grados según el nivel seleccionado
     let gradosFiltrados = this.todosLosGrados;
+    const nivel = nivelSeleccionado.value;
     
-    if (nivelSeleccionado && nivelSeleccionado !== 'todos') {
+    if (nivel && nivel !== 'todos') {
       const filtrosNivel = {
         'parvularia': (grado) => grado.includes('Prekínder') || grado.includes('Kínder'),
         'basica': (grado) => grado.includes('Básico'),
         'media': (grado) => grado.includes('Medio')
       };
       
-      const filtro = filtrosNivel[nivelSeleccionado];
+      const filtro = filtrosNivel[nivel];
       if (filtro) {
         gradosFiltrados = this.todosLosGrados.filter(filtro);
       }
@@ -106,7 +159,7 @@ class Dashboard {
     
     // Agregar opciones filtradas
     gradosFiltrados.forEach(grado => {
-      if (grado !== 'Todos') {
+      if (grado && grado !== 'Todos') {
         const option = document.createElement('option');
         option.value = grado;
         option.textContent = grado;
@@ -114,38 +167,19 @@ class Dashboard {
       }
     });
     
-    console.log(`✅ Grados filtrados para nivel ${nivelSeleccionado}:`, gradosFiltrados);
+    console.log(`✅ Grados filtrados para nivel ${nivel}:`, gradosFiltrados.length);
   }
 
   cargarGradosPorDefecto() {
+    console.log('📚 Cargando grados por defecto...');
     this.todosLosGrados = [
-      'Prekínder A',
-      'Prekínder B', 
-      'Kínder A',
-      'Kínder B',
-      '1° Básico A',
-      '1° Básico B',
-      '2° Básico A',
-      '2° Básico B',
-      '3° Básico A',
-      '3° Básico B',
-      '4° Básico A',
-      '4° Básico B',
-      '5° Básico A',
-      '5° Básico B',
-      '6° Básico A',
-      '6° Básico B',
-      '7° Básico A',
-      '7° Básico B',
-      '8° Básico A',
-      '1° Medio A',
-      '1° Medio B',
-      '2° Medio A', 
-      '2° Medio B',
-      '3° Medio A',
-      '3° Medio B',
-      '4° Medio A',
-      '4° Medio B'
+      'Prekínder A', 'Prekínder B', 'Kínder A', 'Kínder B',
+      '1° Básico A', '1° Básico B', '2° Básico A', '2° Básico B',
+      '3° Básico A', '3° Básico B', '4° Básico A', '4° Básico B',
+      '5° Básico A', '5° Básico B', '6° Básico A', '6° Básico B',
+      '7° Básico A', '7° Básico B', '8° Básico A',
+      '1° Medio A', '1° Medio B', '2° Medio A', '2° Medio B',
+      '3° Medio A', '3° Medio B', '4° Medio A', '4° Medio B'
     ];
     
     this.actualizarFiltroGrados();
@@ -181,8 +215,18 @@ class Dashboard {
   async aplicarFiltros() {
     console.log('🎯 Aplicando filtros...');
     
-    let fechaInicio = document.getElementById('fechaInicio').value;
-    let fechaFin = document.getElementById('fechaFin').value;
+    const fechaInicioElem = document.getElementById('fechaInicio');
+    const fechaFinElem = document.getElementById('fechaFin');
+    const nivelElem = document.getElementById('nivel');
+    const gradoElem = document.getElementById('grado');
+    
+    if (!fechaInicioElem || !fechaFinElem || !nivelElem || !gradoElem) {
+      console.error('❌ Elementos de filtro no encontrados');
+      return;
+    }
+    
+    let fechaInicio = fechaInicioElem.value;
+    let fechaFin = fechaFinElem.value;
 
     console.log('📅 Fechas seleccionadas:', { fechaInicio, fechaFin });
 
@@ -193,23 +237,12 @@ class Dashboard {
       return;
     }
 
-    if (fechasValidadas.fechaInicio !== fechaInicio || fechasValidadas.fechaFin !== fechaFin) {
-      console.log('🔄 Actualizando Flatpickr con fechas corregidas');
-      
-      if (this.flatpickrInicio) {
-        this.flatpickrInicio.setDate(fechasValidadas.fechaInicio, false);
-      }
-      if (this.flatpickrFin) {
-        this.flatpickrFin.setDate(fechasValidadas.fechaFin, false);
-      }
-    }
-
     const filtros = {
       fechaInicio: fechasValidadas.fechaInicio,
       fechaFin: fechasValidadas.fechaFin,
-      nivel: document.getElementById('nivel').value,
-      grado: document.getElementById('grado').value,
-      curso: 'todos' // Siempre enviar 'todos' ya que eliminamos el filtro de curso
+      nivel: nivelElem.value,
+      grado: gradoElem.value,
+      curso: 'todos'
     };
 
     console.log('📋 Filtros aplicados:', filtros);
@@ -223,8 +256,8 @@ class Dashboard {
         this.cargarGraficos(filtros)
       ]);
     } catch (error) {
-      console.error('Error aplicando filtros:', error);
-      alert('Error al cargar los datos: ' + error.message);
+      console.error('❌ Error aplicando filtros:', error);
+      this.mostrarError('Error al cargar los datos: ' + error.message);
     } finally {
       this.mostrarLoading(false);
     }
@@ -239,10 +272,15 @@ class Dashboard {
       params.append('fechaFin', filtros.fechaFin);
       params.append('nivel', filtros.nivel);
       params.append('grado', filtros.grado);
-      params.append('curso', filtros.curso); // Mantener pero siempre será 'todos'
+      params.append('curso', filtros.curso);
       params.append('_t', Date.now());
 
       const response = await fetch(`/api/asistencias/resumen?${params}`);
+      
+      if (!response.ok) {
+        throw new Error(`Error HTTP: ${response.status}`);
+      }
+      
       const data = await response.json();
 
       console.log('📦 Respuesta del backend:', data);
@@ -250,11 +288,11 @@ class Dashboard {
       if (data.success) {
         const tbody = document.querySelector('#tablaAsistencias tbody');
         if (tbody) {
-          tbody.innerHTML = data.tablaHTML;
-          console.log('✅ Tabla actualizada con', data.totalDias, 'días');
+          tbody.innerHTML = data.tablaHTML || '<tr><td colspan="4">No hay datos disponibles</td></tr>';
+          console.log('✅ Tabla actualizada');
         }
       } else {
-        throw new Error(data.message);
+        throw new Error(data.message || 'Error en la respuesta del servidor');
       }
     } catch (error) {
       console.error('❌ Error cargando resumen:', error);
@@ -274,15 +312,20 @@ class Dashboard {
       params.append('fechaFin', filtros.fechaFin);
       params.append('nivel', filtros.nivel);
       params.append('grado', filtros.grado);
-      params.append('curso', filtros.curso); // Mantener pero siempre será 'todos'
+      params.append('curso', filtros.curso);
       params.append('_t', Date.now());
 
       const response = await fetch(`/api/asistencias/alumnos-criticos?${params}`);
+      
+      if (!response.ok) {
+        throw new Error(`Error HTTP: ${response.status}`);
+      }
+      
       const data = await response.json();
 
       if (data.success) {
-        console.log('✅ Alumnos críticos recibidos:', data.alumnosCriticos.length);
-        this.actualizarTablaCriticos(data.alumnosCriticos);
+        console.log('✅ Alumnos críticos recibidos:', data.alumnosCriticos?.length || 0);
+        this.actualizarTablaCriticos(data.alumnosCriticos || []);
       } else {
         throw new Error(data.message || 'Error desconocido en la respuesta');
       }
@@ -290,7 +333,7 @@ class Dashboard {
       console.error('❌ Error cargando alumnos críticos:', error);
       const tbody = document.querySelector('#tablaCriticos tbody');
       if (tbody) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:red;">Error al cargar alumnos críticos: ' + error.message + '</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:red;">Error al cargar alumnos críticos</td></tr>';
       }
     }
   }
@@ -347,20 +390,31 @@ class Dashboard {
     try {
       console.log('📈 Cargando gráficos...');
       
-      const params = new URLSearchParams(filtros);
+      const params = new URLSearchParams();
+      params.append('fechaInicio', filtros.fechaInicio);
+      params.append('fechaFin', filtros.fechaFin);
+      params.append('nivel', filtros.nivel);
+      params.append('grado', filtros.grado);
+      params.append('curso', filtros.curso);
       params.append('_t', Date.now());
 
       const response = await fetch(`/api/asistencias?${params}`);
+      
+      if (!response.ok) {
+        throw new Error(`Error HTTP: ${response.status}`);
+      }
+      
       const data = await response.json();
 
       if (data.success) {
-        this.actualizarGraficos(data.asistencias);
+        this.actualizarGraficos(data.asistencias || []);
         console.log('✅ Gráficos cargados correctamente');
       } else {
-        throw new Error(data.message);
+        throw new Error(data.message || 'Error en la respuesta del servidor');
       }
     } catch (error) {
       console.error('❌ Error cargando gráficos:', error);
+      // No mostrar error para gráficos, son opcionales
     }
   }
 
@@ -376,8 +430,6 @@ class Dashboard {
       return;
     }
 
-    const context = ctx.getContext('2d');
-    
     const totalAsistencias = asistencias.filter(a => a.presente === 1).length;
     const totalFaltas = asistencias.filter(a => a.presente === 0).length;
     const total = totalAsistencias + totalFaltas;
@@ -386,7 +438,7 @@ class Dashboard {
       this.graficoCircular.destroy();
     }
 
-    this.graficoCircular = new Chart(context, {
+    this.graficoCircular = new Chart(ctx, {
       type: 'doughnut',
       data: {
         labels: [`Asistencias (${totalAsistencias})`, `Faltas (${totalFaltas})`],
@@ -402,22 +454,7 @@ class Dashboard {
         maintainAspectRatio: false,
         plugins: {
           legend: {
-            position: 'bottom',
-            labels: {
-              font: {
-                size: 14
-              }
-            }
-          },
-          tooltip: {
-            callbacks: {
-              label: (context) => {
-                const label = context.label || '';
-                const value = context.raw || 0;
-                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) + '%' : '0%';
-                return `${label}: ${value} registros (${percentage})`;
-              }
-            }
+            position: 'bottom'
           }
         }
       }
@@ -431,8 +468,6 @@ class Dashboard {
       return;
     }
 
-    const context = ctx.getContext('2d');
-    
     const datosPorFecha = {};
     asistencias.forEach(a => {
       const fecha = a.fecha;
@@ -454,7 +489,7 @@ class Dashboard {
       this.graficoLineas.destroy();
     }
 
-    this.graficoLineas = new Chart(context, {
+    this.graficoLineas = new Chart(ctx, {
       type: 'line',
       data: {
         labels: fechas.map(f => this.formatearFechaCorta(f)),
@@ -465,8 +500,7 @@ class Dashboard {
             borderColor: '#4CAF50',
             backgroundColor: 'rgba(76, 175, 80, 0.1)',
             tension: 0.4,
-            fill: true,
-            borderWidth: 3
+            fill: true
           },
           {
             label: 'Faltas',
@@ -474,37 +508,13 @@ class Dashboard {
             borderColor: '#F44336',
             backgroundColor: 'rgba(244, 67, 54, 0.1)',
             tension: 0.4,
-            fill: true,
-            borderWidth: 3
+            fill: true
           }
         ]
       },
       options: {
         responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            position: 'top'
-          }
-        },
-        scales: {
-          y: {
-            beginAtZero: true,
-            title: {
-              display: true,
-              text: 'Cantidad de Registros'
-            },
-            ticks: {
-              stepSize: 100
-            }
-          },
-          x: {
-            title: {
-              display: true,
-              text: 'Fecha'
-            }
-          }
-        }
+        maintainAspectRatio: false
       }
     });
   }
@@ -517,7 +527,6 @@ class Dashboard {
         month: '2-digit' 
       });
     } catch (error) {
-      console.error('Error formateando fecha corta:', error);
       return fechaStr;
     }
   }
@@ -526,22 +535,35 @@ class Dashboard {
     const btnFiltrar = document.querySelector('.btn-filtrar');
     if (btnFiltrar) {
       if (mostrar) {
-        btnFiltrar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Filtrando...';
+        btnFiltrar.innerHTML = '🔄 Filtrando...';
         btnFiltrar.disabled = true;
       } else {
-        btnFiltrar.innerHTML = '<i class="fas fa-filter"></i> Filtrar';
+        btnFiltrar.innerHTML = 'Filtrar';
         btnFiltrar.disabled = false;
       }
     }
   }
 
+  mostrarError(mensaje) {
+    // Puedes implementar un sistema de notificaciones más elegante
+    console.error('❌ Error:', mensaje);
+    alert(mensaje);
+  }
+
   cargarDatosIniciales() {
+    // Esperar a que la página se cargue completamente
     setTimeout(() => {
       this.aplicarFiltros();
-    }, 1000);
+    }, 1500);
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+// Inicializar cuando se carga el DOM
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    new Dashboard();
+  });
+} else {
+  // DOM ya está listo
   new Dashboard();
-});
+}

@@ -10,14 +10,11 @@
   <link rel="stylesheet" href="/css/tablas.css" />
   <link rel="stylesheet" href="/css/modal-admin.css" />
 
+  <!-- Flatpickr desde CDN confiable -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
-
-  <!-- Flatpickr -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
 </head>
 
 <body>
@@ -33,17 +30,15 @@
       <span class="user-info">👤 <%= user ? user.name : '' %> (<%= user ? user.role : '' %>)</span>
       <a href="/logout" class="btn-logout">Cerrar sesión</a>
     </div>
-    <!-- En algún lugar de tu dashboard docente, agrega: -->
-    
   </header>
 
   <!-- 🔍 FILTROS -->
   <section class="filtros">
     <div class="filtro-item">
       <label>Desde</label>
-      <input type="text" id="fechaInicio" placeholder="Inicio" />
+      <input type="text" id="fechaInicio" placeholder="Selecciona fecha" readonly>
       <span>→</span>
-      <input type="text" id="fechaFin" placeholder="Fin" />
+      <input type="text" id="fechaFin" placeholder="Selecciona fecha" readonly>
     </div>
 
     <div class="filtro-item">
@@ -63,9 +58,9 @@
       </select>
     </div>
 
-    
-
-    <button class="btn-filtrar">Filtrar</button>
+    <button class="btn-filtrar">
+      <i class="fas fa-filter"></i> Filtrar
+    </button>
   </section>
 
   <!-- 📊 GRAFICOS -->
@@ -98,7 +93,11 @@
             <th>% Asistencia</th>
           </tr>
         </thead>
-        <tbody></tbody>
+        <tbody>
+          <tr>
+            <td colspan="4" style="text-align:center;">Cargando datos...</td>
+          </tr>
+        </tbody>
       </table>
     </div>
 
@@ -123,36 +122,35 @@
   </section>
 
   <!-- 🛠️ Panel admin -->
-<% if (user && user.role === 'admin') { %>
-  <button id="abrirAdminPanel" class="btn-admin-open">⚙️</button>
+  <% if (user && user.role === 'admin') { %>
+    <button id="abrirAdminPanel" class="btn-admin-open">⚙️</button>
 
-  <div id="adminModal" class="modal">
-    <div class="modal-content">
-      <span id="cerrarAdminPanel" class="modal-close">&times;</span>
-      <h2>🛠️ Panel de Administración</h2>
+    <div id="adminModal" class="modal">
+      <div class="modal-content">
+        <span id="cerrarAdminPanel" class="modal-close">&times;</span>
+        <h2>🛠️ Panel de Administración</h2>
 
-      <div class="admin-section">
-        <h3>📤 Subir Alumnos desde Excel</h3>
-        <form id="uploadExcelForm" enctype="multipart/form-data">
-          <label for="excelFile">Selecciona Excel:</label>
-          <input type="file" id="excelFile" name="file" accept=".xlsx,.xls" required />
-
-          <button class="btn-admin" type="submit">Subir Archivo</button>
-        </form>
-      </div>
-      <div style="text-align: center; margin: 20px 0;">
-        <a href="/scanner" class="btn-logout" style="display: inline-flex; align-items: center; gap: 8px; background: #28a745;">
+        <div class="admin-section">
+          <h3>📤 Subir Alumnos desde Excel</h3>
+          <form id="uploadExcelForm" enctype="multipart/form-data">
+            <label for="excelFile">Selecciona Excel:</label>
+            <input type="file" id="excelFile" name="file" accept=".xlsx,.xls" required />
+            <button class="btn-admin" type="submit">Subir Archivo</button>
+          </form>
+        </div>
+        <div style="text-align: center; margin: 20px 0;">
+          <a href="/scanner" class="btn-logout" style="display: inline-flex; align-items: center; gap: 8px; background: #28a745;">
             📟 Registrar con Lector de Código de Barras
-        </a>
+          </a>
+        </div>
+      </div>
     </div>
-    </div>
-  </div>
-<% } %>
+  <% } %>
 
-
-  <!-- JS -->
-
-  <script src="/js/admin-panel.js" defer></script>
-  <script src="/js/Dashboard.js" defer></script>
+  <!-- JS - Cargar Flatpickr primero -->
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+  <script src="/js/Dashboard.js"></script>
+  <script src="/js/admin-panel.js"></script>
 </body>
 </html>

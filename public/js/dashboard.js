@@ -11,58 +11,83 @@ class Dashboard {
 
   init() {
     console.log('🚀 Inicializando Dashboard...');
-    this.configurarFiltros();
-    this.cargarDatosIniciales();
-    this.configurarEventos();
+    this.verificarDependencias().then(() => {
+      this.configurarFiltros();
+      this.cargarDatosIniciales();
+      this.configurarEventos();
+    }).catch(error => {
+      console.error('❌ Error inicializando dashboard:', error);
+      this.usarFallback();
+    });
+  }
+
+  async verificarDependencias() {
+    // Verificar si Flatpickr está cargado
+    if (typeof flatpickr === 'undefined') {
+      throw new Error('Flatpickr no está disponible');
+    }
+    
+    // Verificar si Chart.js está cargado
+    if (typeof Chart === 'undefined') {
+      throw new Error('Chart.js no está disponible');
+    }
+    
+    console.log('✅ Todas las dependencias cargadas correctamente');
   }
 
   configurarFiltros() {
-    try {
-      // Verificar si Flatpickr está disponible
-      if (typeof flatpickr === 'undefined') {
-        console.warn('⚠️ Flatpickr no está disponible, usando inputs nativos');
-        this.usarInputsNativos();
-        return;
-      }
+    this.configurarFlatpickr();
+    this.cargarGrados();
+  }
 
-      // Configurar Flatpickr para fechas - CONFIGURACIÓN CORREGIDA
+  configurarFlatpickr() {
+    try {
+      // Configurar fechas por defecto
+      const hoy = new Date();
+      const haceUnaSemana = new Date();
+      haceUnaSemana.setDate(hoy.getDate() - 7);
+
+      // Configurar Flatpickr para fecha inicio
       this.flatpickrInicio = flatpickr("#fechaInicio", {
         locale: "es",
         dateFormat: "Y-m-d",
-        defaultDate: new Date().toISOString().split('T')[0],
-        allowInput: true,
+        defaultDate: haceUnaSemana,
+        allowInput: false,
         clickOpens: true,
-        static: true,
-        monthSelectorType: 'static',
+        static: false,
+        monthSelectorType: 'dropdown',
+        yearSelectorType: 'dropdown',
         onChange: (selectedDates, dateStr) => {
           console.log('📅 Fecha inicio cambiada:', dateStr);
+          this.validarRangoFechas();
         }
       });
 
+      // Configurar Flatpickr para fecha fin
       this.flatpickrFin = flatpickr("#fechaFin", {
         locale: "es",
         dateFormat: "Y-m-d", 
-        defaultDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        allowInput: true,
+        defaultDate: hoy,
+        allowInput: false,
         clickOpens: true,
-        static: true,
-        monthSelectorType: 'static',
+        static: false,
+        monthSelectorType: 'dropdown',
+        yearSelectorType: 'dropdown',
         onChange: (selectedDates, dateStr) => {
           console.log('📅 Fecha fin cambiada:', dateStr);
+          this.validarRangoFechas();
         }
       });
 
       console.log('✅ Flatpickr configurado correctamente');
     } catch (error) {
       console.error('❌ Error configurando Flatpickr:', error);
-      this.usarInputsNativos();
+      this.configurarInputsNativos();
     }
-
-    this.cargarGrados();
   }
 
-  usarInputsNativos() {
-    // Fallback a inputs de fecha nativos
+  configurarInputsNativos() {
+    console.log('🔄 Usando inputs de fecha nativos como fallback');
     const fechaInicio = document.getElementById('fechaInicio');
     const fechaFin = document.getElementById('fechaFin');
     
@@ -70,39 +95,44 @@ class Dashboard {
       fechaInicio.type = 'date';
       fechaFin.type = 'date';
       
-      // Establecer fechas por defecto
       const hoy = new Date();
-      const enUnaSemana = new Date(hoy.getTime() + 7 * 24 * 60 * 60 * 1000);
+      const haceUnaSemana = new Date();
+      haceUnaSemana.setDate(hoy.getDate() - 7);
       
-      fechaInicio.value = hoy.toISOString().split('T')[0];
-      fechaFin.value = enUnaSemana.toISOString().split('T')[0];
-      
-      console.log('✅ Usando inputs de fecha nativos');
+      fechaInicio.value = haceUnaSemana.toISOString().split('T')[0];
+      fechaFin.value = hoy.toISOString().split('T')[0];
     }
   }
 
-  validarYRangoFechas(fechaInicio, fechaFin) {
-    if (!fechaInicio || !fechaFin) {
-      return { fechaInicio: null, fechaFin: null, valido: false };
+  validarRangoFechas() {
+    const fechaInicio = this.flatpickrInicio?.selectedDates[0] || 
+                       new Date(document.getElementById('fechaInicio').value);
+    const fechaFin = this.flatpickrFin?.selectedDates[0] || 
+                    new Date(document.getElementById('fechaFin').value);
+
+    if (fechaInicio > fechaFin) {
+      console.log('🔄 Fechas invertidas, corrigiendo automáticamente...');
+      if (this.flatpickrInicio && this.flatpickrFin) {
+        this.flatpickrInicio.setDate(fechaFin);
+        this.flatpickrFin.setDate(fechaInicio);
+      }
     }
+  }
 
-    const inicio = new Date(fechaInicio);
-    const fin = new Date(fechaFin);
-
-    if (inicio > fin) {
-      console.log('🔄 Fechas invertidas, corrigiendo...');
-      return { 
-        fechaInicio: fechaFin, 
-        fechaFin: fechaInicio, 
-        valido: true 
-      };
+  usarFallback() {
+    console.log('🔧 Activando modo fallback...');
+    this.configurarInputsNativos();
+    this.cargarGradosPorDefecto();
+    this.configurarEventos();
+    
+    // Mostrar advertencia al usuario
+    const filtrosSection = document.querySelector('.filtros');
+    if (filtrosSection) {
+      const warning = document.createElement('div');
+      warning.style.cssText = 'background: #fff3cd; border: 1px solid #ffeaa7; padding: 10px; border-radius: 4px; margin-bottom: 15px;';
+      warning.innerHTML = '⚠️ Algunas funciones avanzadas no están disponibles. Usando modo básico.';
+      filtrosSection.insertBefore(warning, filtrosSection.firstChild);
     }
-
-    return { 
-      fechaInicio: fechaInicio, 
-      fechaFin: fechaFin, 
-      valido: true 
-    };
   }
 
   async cargarGrados() {
@@ -115,15 +145,11 @@ class Dashboard {
       }
       
       const grados = await response.json();
-      
-      // Guardar todos los grados para filtrado posterior
       this.todosLosGrados = Array.isArray(grados) ? grados : [];
-      
       this.actualizarFiltroGrados();
       console.log('✅ Grados cargados:', this.todosLosGrados.length);
     } catch (error) {
       console.error('❌ Error cargando grados:', error);
-      // Cargar grados por defecto si falla la API
       this.cargarGradosPorDefecto();
     }
   }
@@ -215,18 +241,20 @@ class Dashboard {
   async aplicarFiltros() {
     console.log('🎯 Aplicando filtros...');
     
-    const fechaInicioElem = document.getElementById('fechaInicio');
-    const fechaFinElem = document.getElementById('fechaFin');
-    const nivelElem = document.getElementById('nivel');
-    const gradoElem = document.getElementById('grado');
+    let fechaInicio, fechaFin;
     
-    if (!fechaInicioElem || !fechaFinElem || !nivelElem || !gradoElem) {
-      console.error('❌ Elementos de filtro no encontrados');
-      return;
+    // Obtener fechas según el método usado (Flatpickr o nativo)
+    if (this.flatpickrInicio && this.flatpickrFin) {
+      fechaInicio = this.flatpickrInicio.selectedDates[0] ? 
+                   this.flatpickrInicio.formatDate(this.flatpickrInicio.selectedDates[0], 'Y-m-d') : 
+                   document.getElementById('fechaInicio').value;
+      fechaFin = this.flatpickrFin.selectedDates[0] ? 
+                this.flatpickrFin.formatDate(this.flatpickrFin.selectedDates[0], 'Y-m-d') : 
+                document.getElementById('fechaFin').value;
+    } else {
+      fechaInicio = document.getElementById('fechaInicio').value;
+      fechaFin = document.getElementById('fechaFin').value;
     }
-    
-    let fechaInicio = fechaInicioElem.value;
-    let fechaFin = fechaFinElem.value;
 
     console.log('📅 Fechas seleccionadas:', { fechaInicio, fechaFin });
 
@@ -240,8 +268,8 @@ class Dashboard {
     const filtros = {
       fechaInicio: fechasValidadas.fechaInicio,
       fechaFin: fechasValidadas.fechaFin,
-      nivel: nivelElem.value,
-      grado: gradoElem.value,
+      nivel: document.getElementById('nivel').value,
+      grado: document.getElementById('grado').value,
       curso: 'todos'
     };
 
@@ -261,6 +289,30 @@ class Dashboard {
     } finally {
       this.mostrarLoading(false);
     }
+  }
+
+  validarYRangoFechas(fechaInicio, fechaFin) {
+    if (!fechaInicio || !fechaFin) {
+      return { fechaInicio: null, fechaFin: null, valido: false };
+    }
+
+    const inicio = new Date(fechaInicio);
+    const fin = new Date(fechaFin);
+
+    if (inicio > fin) {
+      console.log('🔄 Fechas invertidas, corrigiendo...');
+      return { 
+        fechaInicio: fechaFin, 
+        fechaFin: fechaInicio, 
+        valido: true 
+      };
+    }
+
+    return { 
+      fechaInicio: fechaInicio, 
+      fechaFin: fechaFin, 
+      valido: true 
+    };
   }
 
   async cargarResumenDiario(filtros) {
@@ -500,7 +552,8 @@ class Dashboard {
             borderColor: '#4CAF50',
             backgroundColor: 'rgba(76, 175, 80, 0.1)',
             tension: 0.4,
-            fill: true
+            fill: true,
+            borderWidth: 3
           },
           {
             label: 'Faltas',
@@ -508,13 +561,34 @@ class Dashboard {
             borderColor: '#F44336',
             backgroundColor: 'rgba(244, 67, 54, 0.1)',
             tension: 0.4,
-            fill: true
+            fill: true,
+            borderWidth: 3
           }
         ]
       },
       options: {
         responsive: true,
-        maintainAspectRatio: false
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'top'
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: 'Cantidad de Registros'
+            }
+          },
+          x: {
+            title: {
+              display: true,
+              text: 'Fecha'
+            }
+          }
+        }
       }
     });
   }
@@ -535,35 +609,50 @@ class Dashboard {
     const btnFiltrar = document.querySelector('.btn-filtrar');
     if (btnFiltrar) {
       if (mostrar) {
-        btnFiltrar.innerHTML = '🔄 Filtrando...';
+        btnFiltrar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Filtrando...';
         btnFiltrar.disabled = true;
       } else {
-        btnFiltrar.innerHTML = 'Filtrar';
+        btnFiltrar.innerHTML = '<i class="fas fa-filter"></i> Filtrar';
         btnFiltrar.disabled = false;
       }
     }
   }
 
   mostrarError(mensaje) {
-    // Puedes implementar un sistema de notificaciones más elegante
     console.error('❌ Error:', mensaje);
+    // Puedes implementar un sistema de notificaciones más elegante aquí
     alert(mensaje);
   }
 
   cargarDatosIniciales() {
-    // Esperar a que la página se cargue completamente
+    // Esperar a que todo esté listo antes de cargar datos
     setTimeout(() => {
       this.aplicarFiltros();
     }, 1500);
   }
 }
 
-// Inicializar cuando se carga el DOM
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    new Dashboard();
-  });
-} else {
-  // DOM ya está listo
-  new Dashboard();
-}
+// Inicialización mejorada
+document.addEventListener('DOMContentLoaded', function() {
+  // Pequeño delay para asegurar que todos los scripts estén cargados
+  setTimeout(() => {
+    try {
+      new Dashboard();
+    } catch (error) {
+      console.error('❌ Error crítico inicializando Dashboard:', error);
+      // Mostrar mensaje de error al usuario
+      const main = document.querySelector('main');
+      if (main) {
+        main.innerHTML = `
+          <div style="text-align: center; padding: 50px; color: #dc3545;">
+            <h2>⚠️ Error al cargar el dashboard</h2>
+            <p>Por favor recarga la página o contacta al administrador.</p>
+            <button onclick="window.location.reload()" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+              Recargar Página
+            </button>
+          </div>
+        `;
+      }
+    }
+  }, 100);
+});

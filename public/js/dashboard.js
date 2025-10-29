@@ -304,7 +304,206 @@ class Dashboard {
   }
 
   actualizarGraficoLineas(asistencias) {
-    // Mantén tu código actual del gráfico de líneas
+    const ctx = document.getElementById('graficoLineas');
+    if (!ctx) {
+        console.log('❌ No se encuentra el canvas para gráfico de líneas');
+        return;
+    }
+
+    try {
+        // Procesar datos por día
+        const datosPorDia = {};
+        
+        asistencias.forEach(registro => {
+            if (registro.fecha) {
+                if (!datosPorDia[registro.fecha]) {
+                    datosPorDia[registro.fecha] = {
+                        total: 0,
+                        presentes: 0
+                    };
+                }
+                datosPorDia[registro.fecha].total++;
+                if (registro.presente === 1) {
+                    datosPorDia[registro.fecha].presentes++;
+                }
+            }
+        });
+
+        // Ordenar fechas correctamente
+        const fechas = Object.keys(datosPorDia).sort((a, b) => new Date(a) - new Date(b));
+        
+        const porcentajes = fechas.map(fecha => {
+            const dia = datosPorDia[fecha];
+            return dia.total > 0 ? ((dia.presentes / dia.total) * 100).toFixed(1) : 0;
+        });
+
+        // Formatear fechas CORRECTAMENTE
+        const fechasFormateadas = fechas.map(fecha => {
+            try {
+                const date = new Date(fecha);
+                // Formato: "29 Oct" o "29/10"
+                return date.toLocaleDateString('es-ES', { 
+                    day: '2-digit', 
+                    month: 'short' 
+                });
+            } catch (error) {
+                return fecha; // Si falla, mostrar la fecha original
+            }
+        });
+
+        // Destruir gráfico anterior si existe
+        if (this.graficoLineas) {
+            this.graficoLineas.destroy();
+        }
+
+        // Colores vibrantes para el gráfico
+        const colores = {
+            linea: '#FF6B35', // Naranja vibrante
+            relleno: 'rgba(255, 107, 53, 0.1)',
+            punto: '#FF6B35',
+            puntoBorde: '#FFFFFF',
+            grid: 'rgba(0, 0, 0, 0.1)',
+            texto: '#333333'
+        };
+
+        // Crear nuevo gráfico MEJORADO
+        this.graficoLineas = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: fechasFormateadas,
+                datasets: [{
+                    label: '📊 % de Asistencia',
+                    data: porcentajes,
+                    borderColor: colores.linea,
+                    backgroundColor: colores.relleno,
+                    borderWidth: 4,
+                    fill: true,
+                    tension: 0.3, // Línea más suave
+                    pointBackgroundColor: colores.punto,
+                    pointBorderColor: colores.puntoBorde,
+                    pointBorderWidth: 3,
+                    pointRadius: 8,
+                    pointHoverRadius: 10,
+                    pointHoverBackgroundColor: '#FF9D76',
+                    pointHoverBorderColor: '#FFFFFF'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '📈 Asistencia por Día',
+                        font: { 
+                            size: 18, 
+                            weight: 'bold',
+                            family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+                        },
+                        color: colores.texto,
+                        padding: 20
+                    },
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            font: { size: 14 },
+                            color: colores.texto,
+                            usePointStyle: true
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: '#FFFFFF',
+                        bodyColor: '#FFFFFF',
+                        borderColor: colores.linea,
+                        borderWidth: 2,
+                        callbacks: {
+                            label: function(context) {
+                                return `Asistencia: ${context.parsed.y}%`;
+                            },
+                            title: function(tooltipItems) {
+                                // Mostrar fecha completa en tooltip
+                                const index = tooltipItems[0].dataIndex;
+                                const fechaOriginal = fechas[index];
+                                try {
+                                    const date = new Date(fechaOriginal);
+                                    return date.toLocaleDateString('es-ES', {
+                                        weekday: 'long',
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric'
+                                    });
+                                } catch (error) {
+                                    return fechaOriginal;
+                                }
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        min: 0,
+                        grid: {
+                            color: colores.grid,
+                            lineWidth: 1
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            },
+                            font: { size: 12 },
+                            color: colores.texto,
+                            stepSize: 10
+                        },
+                        title: {
+                            display: true,
+                            text: 'Porcentaje de Asistencia',
+                            font: { size: 14, weight: 'bold' },
+                            color: colores.texto
+                        }
+                    },
+                    x: {
+                        grid: {
+                            color: colores.grid,
+                            lineWidth: 1
+                        },
+                        ticks: {
+                            font: { size: 11 },
+                            color: colores.texto,
+                            maxRotation: 45,
+                            minRotation: 45
+                        },
+                        title: {
+                            display: true,
+                            text: 'Fechas',
+                            font: { size: 14, weight: 'bold' },
+                            color: colores.texto
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
+                animations: {
+                    tension: {
+                        duration: 1000,
+                        easing: 'linear'
+                    }
+                }
+            }
+        });
+
+        console.log('✅ Gráfico de líneas MEJORADO actualizado');
+        console.log('Fechas procesadas:', fechasFormateadas);
+        console.log('Porcentajes:', porcentajes);
+
+    } catch (error) {
+        console.error('❌ Error creando gráfico de líneas:', error);
+    }
   }
 
   mostrarLoading(mostrar) {

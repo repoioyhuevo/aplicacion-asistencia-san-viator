@@ -283,8 +283,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function editarDocente(id) {
-    alert(`Funcionalidad de edición para docente ID: ${id} - Por implementar`);
-    // Aquí puedes implementar un modal de edición similar al de creación
+    
   }
 
   function mostrarLoadingDocentes(mostrar) {
@@ -356,8 +355,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function mostrarFormularioAlumno() {
-    alert('Funcionalidad para crear nuevo alumno - Por implementar');
-    // Puedes implementar un modal similar al de docentes
+  
   }
 
   async function eliminarAlumno(id) {

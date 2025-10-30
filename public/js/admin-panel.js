@@ -378,7 +378,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function editarAlumno(id) {
-    alert(`Funcionalidad de edición para alumno ID: ${id} - Por implementar`);
+    
   }
 
   function mostrarLoadingAlumnos(mostrar) {

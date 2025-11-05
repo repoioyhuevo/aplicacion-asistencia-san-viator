@@ -1,4 +1,4 @@
-// public/js/Dashboard.js
+// public/js/Dashboard.js - VERSIÓN SIN BLOQUEOS
 class Dashboard {
   constructor() {
     this.graficoCircular = null;
@@ -12,7 +12,6 @@ class Dashboard {
   init() {
     console.log('🚀 Inicializando Dashboard...');
     
-    // Pequeño delay para asegurar que Flatpickr esté cargado
     setTimeout(() => {
       this.inicializarTodo();
     }, 100);
@@ -20,18 +19,10 @@ class Dashboard {
 
   inicializarTodo() {
     try {
-      // 1. Configurar Flatpickr primero
       this.configurarFlatpickr();
-      
-      // 2. Cargar grados
       this.cargarGrados();
-      
-      // 3. Configurar eventos
       this.configurarEventos();
-      
-      // 4. Cargar datos iniciales
       this.cargarDatosIniciales();
-      
     } catch (error) {
       console.error('❌ Error inicializando:', error);
     }
@@ -41,15 +32,13 @@ class Dashboard {
     try {
       console.log('📅 Configurando Flatpickr...');
       
-      // Configuración SIMPLE pero efectiva
       const opciones = {
         dateFormat: "Y-m-d",
         allowInput: false,
         clickOpens: true,
-        locale: "es" // Usar español
+        locale: "es"
       };
 
-      // Inicializar calendarios
       this.flatpickrInicio = flatpickr("#fechaInicio", {
         ...opciones,
         defaultDate: "2025-10-20"
@@ -64,7 +53,6 @@ class Dashboard {
       
     } catch (error) {
       console.error('❌ Error con Flatpickr:', error);
-      // Si falla, usar inputs nativos
       this.usarInputsNativos();
     }
   }
@@ -178,7 +166,6 @@ class Dashboard {
   obtenerFiltros() {
     let fechaInicio, fechaFin;
     
-    // Obtener fechas de Flatpickr o inputs nativos
     if (this.flatpickrInicio && this.flatpickrFin) {
       fechaInicio = this.flatpickrInicio.input.value;
       fechaFin = this.flatpickrFin.input.value;
@@ -311,7 +298,6 @@ class Dashboard {
     }
 
     try {
-        // Procesar datos por día
         const datosPorDia = {};
         
         asistencias.forEach(registro => {
@@ -329,7 +315,6 @@ class Dashboard {
             }
         });
 
-        // Ordenar fechas correctamente
         const fechas = Object.keys(datosPorDia).sort((a, b) => new Date(a) - new Date(b));
         
         const porcentajes = fechas.map(fecha => {
@@ -337,28 +322,24 @@ class Dashboard {
             return dia.total > 0 ? ((dia.presentes / dia.total) * 100).toFixed(1) : 0;
         });
 
-        // Formatear fechas CORRECTAMENTE
         const fechasFormateadas = fechas.map(fecha => {
             try {
                 const date = new Date(fecha);
-                // Formato: "29 Oct" o "29/10"
                 return date.toLocaleDateString('es-ES', { 
                     day: '2-digit', 
                     month: 'short' 
                 });
             } catch (error) {
-                return fecha; // Si falla, mostrar la fecha original
+                return fecha;
             }
         });
 
-        // Destruir gráfico anterior si existe
         if (this.graficoLineas) {
             this.graficoLineas.destroy();
         }
 
-        // Colores vibrantes para el gráfico
         const colores = {
-            linea: '#FF6B35', // Naranja vibrante
+            linea: '#FF6B35',
             relleno: 'rgba(255, 107, 53, 0.1)',
             punto: '#FF6B35',
             puntoBorde: '#FFFFFF',
@@ -366,7 +347,6 @@ class Dashboard {
             texto: '#333333'
         };
 
-        // Crear nuevo gráfico MEJORADO
         this.graficoLineas = new Chart(ctx, {
             type: 'line',
             data: {
@@ -378,7 +358,7 @@ class Dashboard {
                     backgroundColor: colores.relleno,
                     borderWidth: 4,
                     fill: true,
-                    tension: 0.3, // Línea más suave
+                    tension: 0.3,
                     pointBackgroundColor: colores.punto,
                     pointBorderColor: colores.puntoBorde,
                     pointBorderWidth: 3,
@@ -423,7 +403,6 @@ class Dashboard {
                                 return `Asistencia: ${context.parsed.y}%`;
                             },
                             title: function(tooltipItems) {
-                                // Mostrar fecha completa en tooltip
                                 const index = tooltipItems[0].dataIndex;
                                 const fechaOriginal = fechas[index];
                                 try {
@@ -497,9 +476,7 @@ class Dashboard {
             }
         });
 
-        console.log('✅ Gráfico de líneas MEJORADO actualizado');
-        console.log('Fechas procesadas:', fechasFormateadas);
-        console.log('Porcentajes:', porcentajes);
+        console.log('✅ Gráfico de líneas actualizado');
 
     } catch (error) {
         console.error('❌ Error creando gráfico de líneas:', error);
@@ -521,7 +498,7 @@ class Dashboard {
   }
 }
 
-// Inicialización simple
+// Inicialización
 document.addEventListener('DOMContentLoaded', () => {
   new Dashboard();
 });

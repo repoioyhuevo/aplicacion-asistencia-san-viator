@@ -1,6 +1,7 @@
-// controllers/dailyAttendanceController.js
+// controllers/dailyAttendanceController.js - VERSIÓN CORREGIDA
 const db = require('../models/db');
 const https = require('https');
+const { verificarBloqueo } = require('./adminController'); // ✅ Importar función corregida
 
 // Cache para almacenar feriados (para no hacer muchas llamadas a la API)
 let feriadosCache = new Map();
@@ -171,7 +172,7 @@ async function esDiaHabil(fecha = new Date()) {
   }
 }
 
-// Función para registrar faltas automáticas diarias
+// ✅ FUNCIÓN CORREGIDA: Registrar faltas automáticas diarias
 exports.registrarFaltasAutomaticas = async () => {
   try {
     const hoy = new Date();
@@ -200,10 +201,11 @@ exports.registrarFaltasAutomaticas = async () => {
     
     // Obtener todos los estudiantes EXCLUYENDO TRANSICIÓN
     const [estudiantes] = await db.query(
-      `SELECT e.id, e.run, e.nombres, e.apellido_paterno
+      `SELECT e.id, e.run, e.nombres, e.apellido_paterno, e.curso_id
        FROM estudiantes2 e
        INNER JOIN cursos c ON e.curso_id = c.id
-       WHERE c.descripcion NOT LIKE '%Transición%'`
+       WHERE c.descripcion NOT LIKE '%Transición%'
+       AND e.activo = 1`
     );
     
     if (estudiantes.length === 0) {
@@ -211,14 +213,24 @@ exports.registrarFaltasAutomaticas = async () => {
       return;
     }
     
-    console.log(`📝 Registrando ${estudiantes.length} faltas automáticas (excluyendo transición)...`);
+    console.log(`📝 Procesando ${estudiantes.length} estudiantes...`);
     
     let registrosExitosos = 0;
     let registrosConError = 0;
+    let registrosBloqueados = 0;
 
     // Registrar faltas automáticas
     for (const estudiante of estudiantes) {
       try {
+        // ✅ VERIFICAR SI EL CURSO ESTÁ BLOQUEADO PARA HOY
+        const estaBloqueado = await verificarBloqueo(estudiante.curso_id, fechaStr);
+        
+        if (estaBloqueado) {
+          console.log(`⏭️ Curso ${estudiante.curso_id} bloqueado hoy, omitiendo estudiante ${estudiante.run}`);
+          registrosBloqueados++;
+          continue; // Saltar este estudiante
+        }
+
         await db.query(
           `INSERT INTO asistencias 
            (id_estudiante, fecha, hora, tipo_registro, presente) 
@@ -238,6 +250,7 @@ exports.registrarFaltasAutomaticas = async () => {
     }
     
     console.log(`✅ ${registrosExitosos} faltas automáticas registradas para ${fechaStr}`);
+    console.log(`⏭️ ${registrosBloqueados} estudiantes omitidos por bloqueos`);
     if (registrosConError > 0) {
       console.log(`⚠️ ${registrosConError} registros con error`);
     }
@@ -267,6 +280,7 @@ exports.iniciarProgramadorDiario = () => {
     console.log('✅ Programador diario de faltas iniciado (6:00 AM todos los días)');
     console.log('📅 Sistema configurado para: Lunes a Viernes (excluyendo feriados)');
     console.log('🎯 Estudiantes: Solo Prekínder a 4° Medio (excluyendo transición)');
+    console.log('🚫 Bloqueos: Activados - Se respetarán los cursos bloqueados');
     
   } catch (error) {
     console.log('❌ node-cron no instalado. Para activar el programador automático:');

@@ -1,5 +1,7 @@
-// admin-panel.js - VERSIÓN COMPLETA ACTUALIZADA
-document.addEventListener('DOMContentLoaded', () => {
+// admin-panel.js - VERSIÓN COMPLETA CON FUNCIONALIDADES DE EDICIÓN
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('🚀 Admin Panel iniciando...');
+  
   const formUploadExcel = document.getElementById('uploadExcelForm');
   const modalAdmin = document.getElementById('adminModal');
   const abrirAdminPanel = document.getElementById('abrirAdminPanel');
@@ -7,21 +9,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Variables globales
   let cursos = [];
+  let alumnoEditando = null;
+  let docenteEditando = null;
 
   // Abrir/cerrar modal
-  if (abrirAdminPanel) abrirAdminPanel.addEventListener('click', () => {
-    modalAdmin.style.display = 'block';
-    cargarDatosIniciales();
-  });
+  if (abrirAdminPanel) {
+    abrirAdminPanel.addEventListener('click', function() {
+      console.log('📂 Abriendo Panel Admin...');
+      modalAdmin.style.display = 'block';
+      cargarDatosIniciales();
+    });
+  }
   
-  if (cerrarAdminPanel) cerrarAdminPanel.addEventListener('click', () => modalAdmin.style.display = 'none');
+  if (cerrarAdminPanel) {
+    cerrarAdminPanel.addEventListener('click', function() {
+      modalAdmin.style.display = 'none';
+      limpiarFormularios();
+    });
+  }
   
-  window.addEventListener('click', (e) => { 
-    if (e.target == modalAdmin) modalAdmin.style.display = 'none'; 
+  window.addEventListener('click', function(e) { 
+    if (e.target == modalAdmin) {
+      modalAdmin.style.display = 'none'; 
+      limpiarFormularios();
+    }
   });
+
+  function limpiarFormularios() {
+    alumnoEditando = null;
+    docenteEditando = null;
+    document.getElementById('formDocente').reset();
+    document.getElementById('formAlumno').reset();
+    document.getElementById('btnSubmitAlumno').textContent = 'Agregar Alumno';
+    document.getElementById('tituloFormAlumno').textContent = 'Agregar Nuevo Alumno';
+    document.getElementById('btnCancelarDocente').style.display = 'none';
+    document.getElementById('tituloFormDocente').textContent = 'Agregar Nuevo Docente';
+  }
 
   // Inicializar todo cuando el modal se abre
   function cargarDatosIniciales() {
+    console.log('🔄 Cargando datos iniciales...');
     cargarCursos();
     configurarTabs();
     configurarEventos();
@@ -31,15 +58,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function cargarCursos() {
     try {
+      console.log('📚 Cargando cursos...');
       const response = await fetch('/admin/cursos');
       cursos = await response.json();
+      console.log(`✅ Cursos cargados: ${cursos.length}`);
       actualizarSelectsCursos();
     } catch (error) {
       console.error('Error cargando cursos:', error);
     }
   }
 
+  // ✅ ACTUALIZAR SELECTS DE CURSOS
   function actualizarSelectsCursos() {
+    console.log('🔄 Actualizando selects de cursos...');
+    
     // Select de filtro de alumnos
     const selectFiltro = document.getElementById('filtroCursoAlumno');
     if (selectFiltro) {
@@ -50,6 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
         option.textContent = curso.descripcion;
         selectFiltro.appendChild(option);
       });
+      console.log(`✅ Select de cursos actualizado: ${cursos.length} cursos`);
     }
 
     // Select de bloqueos
@@ -63,6 +96,18 @@ document.addEventListener('DOMContentLoaded', () => {
         selectBloqueo.appendChild(option);
       });
     }
+
+    // Select de curso para formulario alumno
+    const selectCursoAlumno = document.getElementById('alumnoCurso');
+    if (selectCursoAlumno) {
+      selectCursoAlumno.innerHTML = '<option value="">Seleccionar curso</option>';
+      cursos.forEach(curso => {
+        const option = document.createElement('option');
+        option.value = curso.id;
+        option.textContent = curso.descripcion;
+        selectCursoAlumno.appendChild(option);
+      });
+    }
   }
 
   function configurarTabs() {
@@ -70,15 +115,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const tabPanes = document.querySelectorAll('.tab-pane');
 
     tabButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        const tabId = button.getAttribute('data-tab');
+      button.addEventListener('click', function() {
+        const tabId = this.getAttribute('data-tab');
         
         // Remover active de todos
         tabButtons.forEach(btn => btn.classList.remove('active'));
         tabPanes.forEach(pane => pane.classList.remove('active'));
         
         // Agregar active al seleccionado
-        button.classList.add('active');
+        this.classList.add('active');
         document.getElementById(`tab-${tabId}`).classList.add('active');
 
         // Cargar datos específicos de la pestaña
@@ -88,20 +133,41 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function configurarEventos() {
+    console.log('⚙️ Configurando eventos...');
+    
     // Formulario docente
-    document.getElementById('formDocente')?.addEventListener('submit', (e) => {
+    document.getElementById('formDocente').addEventListener('submit', (e) => {
       e.preventDefault();
-      crearDocente();
+      if (docenteEditando) {
+        actualizarDocente();
+      } else {
+        crearDocente();
+      }
+    });
+
+    // Formulario alumno
+    document.getElementById('formAlumno').addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (alumnoEditando) {
+        actualizarAlumno();
+      } else {
+        crearAlumno();
+      }
     });
 
     // Formulario bloqueo
-    document.getElementById('formBloqueo')?.addEventListener('submit', (e) => {
+    document.getElementById('formBloqueo').addEventListener('submit', (e) => {
       e.preventDefault();
       crearBloqueo();
     });
 
+    // Cancelar edición docente
+    document.getElementById('btnCancelarDocente').addEventListener('click', function() {
+      limpiarFormularioDocente();
+    });
+
     // Tipo de bloqueo
-    document.getElementById('bloqueoTipo')?.addEventListener('change', (e) => {
+    document.getElementById('bloqueoTipo').addEventListener('change', (e) => {
       const tipo = e.target.value;
       document.getElementById('bloqueoDiaSemana').style.display = 
         tipo === 'dia_semana' ? 'block' : 'none';
@@ -109,19 +175,46 @@ document.addEventListener('DOMContentLoaded', () => {
         tipo === 'fecha_especifica' ? 'block' : 'none';
     });
 
-    // Filtros alumnos
-    document.getElementById('btnFiltrarAlumnos')?.addEventListener('click', () => {
-      cargarAlumnos();
-    });
+    // ✅ EVENTO SIMPLE PARA FILTRO DE CURSO
+    const filtroCurso = document.getElementById('filtroCursoAlumno');
+    if (filtroCurso) {
+      filtroCurso.addEventListener('change', function() {
+        console.log('🎓 Filtro de curso cambiado:', this.value);
+        cargarAlumnos();
+      });
+    }
 
-    document.getElementById('buscarAlumno')?.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') cargarAlumnos();
-    });
+    // Botón filtrar
+    const btnFiltrarAlumnos = document.getElementById('btnFiltrarAlumnos');
+    if (btnFiltrarAlumnos) {
+      btnFiltrarAlumnos.addEventListener('click', function() {
+        cargarAlumnos();
+      });
+    }
+
+    // Buscar con Enter
+    const buscarAlumno = document.getElementById('buscarAlumno');
+    if (buscarAlumno) {
+      buscarAlumno.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') cargarAlumnos();
+      });
+    }
 
     // Nuevo alumno
-    document.getElementById('btnNuevoAlumno')?.addEventListener('click', () => {
-      mostrarFormularioAlumno();
-    });
+    const btnNuevoAlumno = document.getElementById('btnNuevoAlumno');
+    if (btnNuevoAlumno) {
+      btnNuevoAlumno.addEventListener('click', function() {
+        mostrarFormularioAlumno();
+      });
+    }
+
+    // Cancelar edición alumno
+    const btnCancelarAlumno = document.getElementById('btnCancelarAlumno');
+    if (btnCancelarAlumno) {
+      btnCancelarAlumno.addEventListener('click', function() {
+        cerrarModalAlumno();
+      });
+    }
   }
 
   async function cargarDatosTab(tabId) {
@@ -138,7 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // ========== SUBIDA DE EXCEL (FUNCIÓN EXISTENTE) ==========
+  // ========== SUBIDA DE EXCEL ==========
 
   if (formUploadExcel) {
     formUploadExcel.addEventListener('submit', async e => {
@@ -263,6 +356,46 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  async function actualizarDocente() {
+    if (!docenteEditando) return;
+
+    const formData = {
+      nombre_usuario: document.getElementById('docenteUsuario').value,
+      nombre_completo: document.getElementById('docenteNombre').value,
+      correo: document.getElementById('docenteCorreo').value,
+      activo: document.getElementById('docenteActivo').checked ? 1 : 0
+    };
+
+    const contraseña = document.getElementById('docentePassword').value;
+    if (contraseña) {
+      formData.contraseña = contraseña;
+    }
+
+    try {
+      const response = await fetch(`/admin/docentes/${docenteEditando}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        alert('✅ Docente actualizado exitosamente');
+        document.getElementById('formDocente').reset();
+        docenteEditando = null;
+        document.getElementById('btnCancelarDocente').style.display = 'none';
+        document.getElementById('tituloFormDocente').textContent = 'Agregar Nuevo Docente';
+        await cargarDocentes();
+      } else {
+        alert('❌ Error: ' + data.message);
+      }
+    } catch (error) {
+      alert('❌ Error al actualizar docente');
+      console.error(error);
+    }
+  }
+
   async function eliminarDocente(id) {
     if (!confirm('¿Estás seguro de eliminar este docente? Esta acción no se puede deshacer.')) return;
 
@@ -283,7 +416,39 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function editarDocente(id) {
-    
+    // Buscar docente por ID
+    fetch(`/admin/docentes`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          const docente = data.docentes.find(d => d.id_usuario == id);
+          if (docente) {
+            docenteEditando = id;
+            document.getElementById('docenteUsuario').value = docente.nombre_usuario;
+            document.getElementById('docenteNombre').value = docente.nombre_completo;
+            document.getElementById('docenteCorreo').value = docente.correo || '';
+            document.getElementById('docenteActivo').checked = docente.activo;
+            document.getElementById('docentePassword').required = false;
+            document.getElementById('btnCancelarDocente').style.display = 'inline-block';
+            document.getElementById('tituloFormDocente').textContent = 'Editar Docente';
+            
+            // Cambiar a pestaña de docentes
+            document.querySelector('[data-tab="docentes"]').click();
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Error cargando docente:', error);
+        alert('Error al cargar datos del docente');
+      });
+  }
+
+  function limpiarFormularioDocente() {
+    docenteEditando = null;
+    document.getElementById('formDocente').reset();
+    document.getElementById('docentePassword').required = true;
+    document.getElementById('btnCancelarDocente').style.display = 'none';
+    document.getElementById('tituloFormDocente').textContent = 'Agregar Nuevo Docente';
   }
 
   function mostrarLoadingDocentes(mostrar) {
@@ -298,28 +463,40 @@ document.addEventListener('DOMContentLoaded', () => {
   // ========== GESTIÓN DE ALUMNOS ==========
 
   async function cargarAlumnos() {
-    const params = new URLSearchParams({
-      curso: document.getElementById('filtroCursoAlumno').value,
-      nivel: document.getElementById('filtroNivelAlumno').value,
-      buscar: document.getElementById('buscarAlumno').value
-    });
+    console.log('🎯 Cargando alumnos...');
+    
+    const filtroCurso = document.getElementById('filtroCursoAlumno').value;
+    const buscar = document.getElementById('buscarAlumno').value;
+
+    console.log(`🔍 Filtros: curso=${filtroCurso}, buscar=${buscar}`);
+
+    const params = new URLSearchParams();
+    
+    if (filtroCurso && filtroCurso !== 'todos') {
+        params.append('curso', filtroCurso);
+    }
+    
+    if (buscar) {
+        params.append('buscar', buscar);
+    }
 
     try {
-      mostrarLoadingAlumnos(true);
-      const response = await fetch(`/admin/alumnos?${params}`);
-      const data = await response.json();
-      
-      if (data.success) {
-        mostrarAlumnos(data.alumnos);
-      } else {
-        throw new Error(data.message);
-      }
+        mostrarLoadingAlumnos(true);
+        const response = await fetch(`/admin/alumnos?${params}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            console.log(`✅ Alumnos cargados: ${data.alumnos.length}`);
+            mostrarAlumnos(data.alumnos);
+        } else {
+            throw new Error(data.message);
+        }
     } catch (error) {
-      console.error('Error cargando alumnos:', error);
-      document.getElementById('tbodyAlumnos').innerHTML = 
-        '<tr><td colspan="5" style="text-align:center; color: red;">Error cargando alumnos</td></tr>';
+        console.error('Error cargando alumnos:', error);
+        document.getElementById('tbodyAlumnos').innerHTML = 
+            '<tr><td colspan="5" style="text-align:center; color: red;">Error cargando alumnos</td></tr>';
     } finally {
-      mostrarLoadingAlumnos(false);
+        mostrarLoadingAlumnos(false);
     }
   }
 
@@ -355,7 +532,88 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function mostrarFormularioAlumno() {
-  
+    // Mostrar modal de alumno
+    document.getElementById('modalAlumno').style.display = 'block';
+    limpiarFormularioAlumno();
+  }
+
+  function limpiarFormularioAlumno() {
+    alumnoEditando = null;
+    document.getElementById('formAlumno').reset();
+    document.getElementById('btnSubmitAlumno').textContent = 'Agregar Alumno';
+    document.getElementById('tituloFormAlumno').textContent = 'Agregar Nuevo Alumno';
+    document.getElementById('alumnoActivo').checked = true;
+  }
+
+  async function crearAlumno() {
+    const formData = {
+      run: document.getElementById('alumnoRun').value,
+      nombres: document.getElementById('alumnoNombres').value,
+      apellido_paterno: document.getElementById('alumnoApellidoPaterno').value,
+      apellido_materno: document.getElementById('alumnoApellidoMaterno').value,
+      curso_id: document.getElementById('alumnoCurso').value
+    };
+
+    // Validación básica
+    if (!formData.run || !formData.nombres || !formData.curso_id) {
+      alert('❌ Por favor completa todos los campos obligatorios');
+      return;
+    }
+
+    try {
+      const response = await fetch('/admin/alumnos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        alert('✅ Alumno creado exitosamente');
+        document.getElementById('modalAlumno').style.display = 'none';
+        await cargarAlumnos();
+      } else {
+        alert('❌ Error: ' + data.message);
+      }
+    } catch (error) {
+      alert('❌ Error al crear alumno');
+      console.error(error);
+    }
+  }
+
+  async function actualizarAlumno() {
+    if (!alumnoEditando) return;
+
+    const formData = {
+      run: document.getElementById('alumnoRun').value,
+      nombres: document.getElementById('alumnoNombres').value,
+      apellido_paterno: document.getElementById('alumnoApellidoPaterno').value,
+      apellido_materno: document.getElementById('alumnoApellidoMaterno').value,
+      curso_id: document.getElementById('alumnoCurso').value,
+      activo: document.getElementById('alumnoActivo').checked ? 1 : 0
+    };
+
+    try {
+      const response = await fetch(`/admin/alumnos/${alumnoEditando}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        alert('✅ Alumno actualizado exitosamente');
+        document.getElementById('modalAlumno').style.display = 'none';
+        await cargarAlumnos();
+      } else {
+        alert('❌ Error: ' + data.message);
+      }
+    } catch (error) {
+      alert('❌ Error al actualizar alumno');
+      console.error(error);
+    }
   }
 
   async function eliminarAlumno(id) {
@@ -378,7 +636,33 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function editarAlumno(id) {
-    
+    // Buscar alumno por ID
+    fetch(`/admin/alumnos`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          const alumno = data.alumnos.find(a => a.id == id);
+          if (alumno) {
+            alumnoEditando = id;
+            document.getElementById('alumnoRun').value = alumno.run || '';
+            document.getElementById('alumnoNombres').value = alumno.nombres || '';
+            document.getElementById('alumnoApellidoPaterno').value = alumno.apellido_paterno || '';
+            document.getElementById('alumnoApellidoMaterno').value = alumno.apellido_materno || '';
+            document.getElementById('alumnoCurso').value = alumno.curso_id || '';
+            document.getElementById('alumnoActivo').checked = alumno.activo;
+            
+            document.getElementById('btnSubmitAlumno').textContent = 'Actualizar Alumno';
+            document.getElementById('tituloFormAlumno').textContent = 'Editar Alumno';
+            
+            // Mostrar modal
+            document.getElementById('modalAlumno').style.display = 'block';
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Error cargando alumno:', error);
+        alert('Error al cargar datos del alumno');
+      });
   }
 
   function mostrarLoadingAlumnos(mostrar) {
@@ -463,8 +747,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (tipo === 'dia_semana') {
       formData.dia_semana = document.getElementById('bloqueoDiaSemana').value;
+      formData.fecha_especifica = null;
     } else {
       formData.fecha_especifica = document.getElementById('bloqueoFechaEspecifica').value;
+      formData.dia_semana = null;
       if (!formData.fecha_especifica) {
         alert('❌ Por favor selecciona una fecha');
         return;
@@ -530,5 +816,20 @@ document.addEventListener('DOMContentLoaded', () => {
   window.eliminarAlumno = eliminarAlumno;
   window.eliminarBloqueo = eliminarBloqueo;
 
-  console.log('✅ Admin Panel cargado completamente');
+  // Cerrar modal alumno
+  window.cerrarModalAlumno = function() {
+    document.getElementById('modalAlumno').style.display = 'none';
+    limpiarFormularioAlumno();
+  };
+
+  // Cerrar modal al hacer click fuera
+  window.onclick = function(event) {
+    const modalAlumno = document.getElementById('modalAlumno');
+    if (event.target == modalAlumno) {
+      modalAlumno.style.display = 'none';
+      limpiarFormularioAlumno();
+    }
+  };
+
+  console.log('✅ Admin Panel cargado completamente con funciones de edición');
 });

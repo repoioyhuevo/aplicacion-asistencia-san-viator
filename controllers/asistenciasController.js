@@ -272,9 +272,11 @@ exports.getResumenAsistencias = async (req, res) => {
 
     const whereClause = filtros.length ? 'AND ' + filtros.join(' AND ') : '';
 
+    // ✅ CONSULTA MEJORADA: Obtener total de estudiantes por día excluyendo bloqueos
     const [asistencias] = await db.query(`
       SELECT 
         DATE(a.fecha) AS fecha,
+        COUNT(DISTINCT e.id) AS total_estudiantes,
         SUM(CASE WHEN a.presente = 1 THEN 1 ELSE 0 END) AS asistencias,
         SUM(CASE WHEN a.presente = 0 THEN 1 ELSE 0 END) AS faltas
       FROM asistencias a
@@ -282,6 +284,18 @@ exports.getResumenAsistencias = async (req, res) => {
       INNER JOIN cursos c ON e.curso_id = c.id
       WHERE DATE(a.fecha) >= ? AND DATE(a.fecha) <= ?
       ${whereClause}
+      AND e.id NOT IN (
+        -- ✅ EXCLUIR ESTUDIANTES DE CURSOS BLOQUEADOS ESE DÍA
+        SELECT DISTINCT e2.id
+        FROM estudiantes2 e2
+        INNER JOIN cursos c2 ON e2.curso_id = c2.id
+        INNER JOIN blogueos_asistencia b ON c2.id = b.curso_id
+        WHERE b.activo = true
+        AND (
+          (b.dia_semana = DAYOFWEEK(a.fecha) - 1 AND b.fecha_especifica IS NULL) OR
+          (b.fecha_especifica = DATE(a.fecha))
+        )
+      )
       GROUP BY DATE(a.fecha)
       ORDER BY fecha
     `, valores);
@@ -300,8 +314,8 @@ exports.getResumenAsistencias = async (req, res) => {
       asistencias.forEach(dia => {
         const asistenciasNum = parseInt(dia.asistencias) || 0;
         const faltasNum = parseInt(dia.faltas) || 0;
-        const total = asistenciasNum + faltasNum;
-        const porcentaje = total > 0 ? ((asistenciasNum / total) * 100) : 0;
+        const totalEstudiantes = parseInt(dia.total_estudiantes) || 0;
+        const porcentaje = totalEstudiantes > 0 ? ((asistenciasNum / totalEstudiantes) * 100) : 0;
         
         const fecha = new Date(dia.fecha);
         const fechaFormateada = fecha.toLocaleDateString('es-CL');
@@ -326,6 +340,7 @@ exports.getResumenAsistencias = async (req, res) => {
     });
 
   } catch (err) {
+    console.error('❌ Error en getResumenAsistencias:', err);
     res.status(500).json({ 
       success: false, 
       message: 'Error al generar resumen: ' + err.message 
@@ -399,6 +414,18 @@ exports.getAlumnosCriticos = async (req, res) => {
       INNER JOIN cursos c ON e.curso_id = c.id
       WHERE DATE(a.fecha) >= ? AND DATE(a.fecha) <= ?
       ${whereClause}
+      AND e.id NOT IN (
+        -- ✅ EXCLUIR ESTUDIANTES DE CURSOS BLOQUEADOS
+        SELECT DISTINCT e2.id
+        FROM estudiantes2 e2
+        INNER JOIN cursos c2 ON e2.curso_id = c2.id
+        INNER JOIN blogueos_asistencia b ON c2.id = b.curso_id
+        WHERE b.activo = true
+        AND (
+          (b.dia_semana = DAYOFWEEK(a.fecha) - 1 AND b.fecha_especifica IS NULL) OR
+          (b.fecha_especifica = DATE(a.fecha))
+        )
+      )
       GROUP BY e.id, e.run, e.nombres, e.apellido_paterno, e.apellido_materno, c.descripcion
       HAVING porcentaje_asistencia < 50 AND total_registros >= 3
       ORDER BY porcentaje_asistencia ASC
@@ -426,6 +453,62 @@ exports.getAlumnosCriticos = async (req, res) => {
     res.status(500).json({ 
       success: false, 
       message: 'Error al obtener alumnos críticos: ' + err.message 
+    });
+  }
+};
+
+// ✅ NUEVA FUNCIÓN: Obtener bloqueos del día
+exports.getBloqueosDelDia = async (req, res) => {
+  try {
+    const { fecha } = req.query;
+    
+    if (!fecha) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Se requiere parámetro fecha' 
+      });
+    }
+
+    console.log(`🔍 Buscando bloqueos para fecha: ${fecha}`);
+    
+    // Obtener el día de la semana (0=Domingo, 1=Lunes, ..., 6=Sábado)
+    const fechaObj = new Date(fecha);
+    const diaSemana = fechaObj.getDay();
+    
+    console.log(`📅 Día de la semana: ${diaSemana} (0=Dom, 1=Lun, ..., 6=Sab)`);
+
+    const [bloqueos] = await db.query(`
+      SELECT 
+        b.id,
+        c.descripcion as curso_nombre,
+        c.nivel,
+        c.letra,
+        b.motivo,
+        b.dia_semana,
+        b.fecha_especifica
+      FROM blogueos_asistencia b
+      INNER JOIN cursos c ON b.curso_id = c.id
+      WHERE b.activo = true
+      AND (
+        (b.dia_semana = ? AND b.fecha_especifica IS NULL) OR
+        (b.fecha_especifica = ?)
+      )
+      ORDER BY c.nivel, c.letra
+    `, [diaSemana, fecha]);
+
+    console.log(`📊 Bloqueos encontrados: ${bloqueos.length} para ${fecha}`);
+    
+    res.json({ 
+      success: true, 
+      bloqueos: bloqueos,
+      total: bloqueos.length
+    });
+
+  } catch (err) {
+    console.error('❌ Error en getBloqueosDelDia:', err);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error al obtener bloqueos: ' + err.message 
     });
   }
 };

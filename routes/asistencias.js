@@ -8,7 +8,8 @@ const {
   getGradosDisponibles,
   getNivelesDisponibles,
   getResumenAsistencias,
-  getAlumnosCriticos
+  getAlumnosCriticos,
+  getBloqueosDelDia  // ✅ AGREGAR ESTA IMPORTACIÓN
 } = require('../controllers/asistenciasController');
 
 // === RUTAS GET ===
@@ -19,5 +20,6 @@ router.get('/grados', getGradosDisponibles);
 router.get('/niveles', getNivelesDisponibles);
 router.get('/resumen', getResumenAsistencias);
 router.get('/alumnos-criticos', getAlumnosCriticos);
+router.get('/bloqueos-del-dia', getBloqueosDelDia); // ✅ AGREGAR ESTA RUTA NUEVA
 
 module.exports = router;

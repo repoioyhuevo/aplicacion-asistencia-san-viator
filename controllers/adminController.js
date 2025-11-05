@@ -1,4 +1,4 @@
-// controllers/adminController.js - VERSIÓN COMPLETA
+// controllers/adminController.js - VERSIÓN COMPLETA CORREGIDA
 const xlsx = require('xlsx');
 const db = require('../models/db');
 const fs = require('fs');
@@ -211,29 +211,33 @@ async function eliminarDocente(req, res) {
 
 // ========== GESTIÓN DE ALUMNOS ==========
 
-// Obtener alumnos con filtros
+// ✅ CORREGIDO: Obtener alumnos con filtros funcionando
 async function getAlumnos(req, res) {
   try {
-    const { curso, nivel, buscar } = req.query;
+    const { curso, buscar } = req.query;
+    
+    console.log(`🔍 Filtros recibidos: curso=${curso}, buscar=${buscar}`);
     
     let whereClause = "WHERE c.descripcion NOT LIKE '%Transición%'";
     const params = [];
     
-    if (curso && curso !== 'todos') {
+    // ✅ FILTRO CURSO SIMPLE
+    if (curso && curso !== 'todos' && curso !== 'undefined') {
       whereClause += " AND c.id = ?";
       params.push(curso);
+      console.log(`🎯 Filtro curso aplicado: ${curso}`);
     }
     
-    if (nivel && nivel !== 'todos') {
-      whereClause += " AND c.nivel = ?";
-      params.push(nivel);
-    }
-    
-    if (buscar) {
+    // ✅ FILTRO BUSCAR
+    if (buscar && buscar !== 'undefined') {
       whereClause += " AND (e.run LIKE ? OR e.nombres LIKE ? OR e.apellido_paterno LIKE ? OR e.apellido_materno LIKE ?)";
       const searchTerm = `%${buscar}%`;
       params.push(searchTerm, searchTerm, searchTerm, searchTerm);
+      console.log(`🎯 Filtro buscar aplicado: ${buscar}`);
     }
+    
+    console.log(`📊 Consulta SQL: SELECT... ${whereClause}`);
+    console.log(`📊 Parámetros:`, params);
     
     const [rows] = await db.query(`
       SELECT e.id, e.run, e.nombres, e.apellido_paterno, e.apellido_materno, 
@@ -245,8 +249,11 @@ async function getAlumnos(req, res) {
       ORDER BY c.nivel, c.letra, e.apellido_paterno, e.apellido_materno, e.nombres
     `, params);
     
+    console.log(`✅ Alumnos encontrados: ${rows.length}`);
+    
     res.json({ success: true, alumnos: rows });
   } catch (err) {
+    console.error('❌ Error en getAlumnos:', err);
     res.status(500).json({ success: false, message: err.message });
   }
 }
@@ -306,7 +313,7 @@ async function eliminarAlumno(req, res) {
 async function crearTablaBloqueos() {
   try {
     await db.query(`
-      CREATE TABLE IF NOT EXISTS bloqueos_asistencia (
+      CREATE TABLE IF NOT EXISTS blogueos_asistencia (
         id INT PRIMARY KEY AUTO_INCREMENT,
         curso_id INT,
         dia_semana INT COMMENT '0=Domingo, 1=Lunes, ..., 6=Sábado',
@@ -328,7 +335,7 @@ async function getBloqueos(req, res) {
   try {
     const [rows] = await db.query(`
       SELECT b.*, c.descripcion as curso_nombre
-      FROM bloqueos_asistencia b
+      FROM blogueos_asistencia b
       INNER JOIN cursos c ON b.curso_id = c.id
       WHERE b.activo = true
       ORDER BY c.descripcion, b.dia_semana
@@ -346,7 +353,7 @@ async function crearBloqueo(req, res) {
     const { curso_id, dia_semana, fecha_especifica, motivo } = req.body;
     
     await db.query(
-      `INSERT INTO bloqueos_asistencia (curso_id, dia_semana, fecha_especifica, motivo, activo)
+      `INSERT INTO blogueos_asistencia (curso_id, dia_semana, fecha_especifica, motivo, activo)
        VALUES (?, ?, ?, ?, true)`,
       [curso_id, dia_semana, fecha_especifica, motivo]
     );
@@ -362,7 +369,7 @@ async function eliminarBloqueo(req, res) {
   try {
     const { id } = req.params;
     
-    await db.query(`UPDATE bloqueos_asistencia SET activo = false WHERE id = ?`, [id]);
+    await db.query(`UPDATE blogueos_asistencia SET activo = false WHERE id = ?`, [id]);
     
     res.json({ success: true, message: 'Bloqueo eliminado exitosamente' });
   } catch (err) {
@@ -370,26 +377,34 @@ async function eliminarBloqueo(req, res) {
   }
 }
 
-// Verificar si un curso está bloqueado para una fecha (para uso interno)
+// ✅ FUNCIÓN CORREGIDA: Verificar si un curso está bloqueado para una fecha
 async function verificarBloqueo(curso_id, fecha) {
   try {
     const fechaObj = new Date(fecha);
     const diaSemana = fechaObj.getDay(); // 0=Domingo, 1=Lunes, ..., 6=Sábado
     
+    // Formatear fecha para comparación
+    const fechaStr = fechaObj.toISOString().split('T')[0];
+    
+    console.log(`🔍 Verificando bloqueo: curso ${curso_id}, fecha ${fechaStr}, día semana ${diaSemana}`);
+    
     const [rows] = await db.query(`
       SELECT COUNT(*) as count 
-      FROM bloqueos_asistencia 
+      FROM blogueos_asistencia 
       WHERE curso_id = ? 
         AND activo = true
         AND (
-          dia_semana = ? OR 
-          fecha_especifica = ?
+          (dia_semana = ? AND fecha_especifica IS NULL) OR 
+          (fecha_especifica = ?)
         )
-    `, [curso_id, diaSemana, fecha]);
+    `, [curso_id, diaSemana, fechaStr]);
     
-    return rows[0].count > 0;
+    const estaBloqueado = rows[0].count > 0;
+    console.log(`📋 Resultado bloqueo: ${estaBloqueado} (${rows[0].count} registros encontrados)`);
+    
+    return estaBloqueado;
   } catch (err) {
-    console.error('Error verificando bloqueo:', err);
+    console.error('❌ Error verificando bloqueo:', err);
     return false;
   }
 }

@@ -165,7 +165,7 @@
               
               <!-- Formulario para agregar docente -->
               <div class="form-container">
-                <h4>Agregar Nuevo Docente</h4>
+                <h4 id="tituloFormDocente">Agregar Nuevo Docente</h4>
                 <form id="formDocente">
                   <div class="form-row">
                     <input type="text" id="docenteUsuario" placeholder="Nombre de usuario" required>
@@ -175,9 +175,18 @@
                     <input type="text" id="docenteNombre" placeholder="Nombre completo" required>
                     <input type="email" id="docenteCorreo" placeholder="Correo electrónico">
                   </div>
-                  <button type="submit" class="btn-admin">
-                    <i class="fas fa-plus"></i> Agregar Docente
-                  </button>
+                  <div class="checkbox-container">
+                    <input type="checkbox" id="docenteActivo" checked>
+                    <label for="docenteActivo">Usuario activo</label>
+                  </div>
+                  <div class="form-actions">
+                    <button type="button" id="btnCancelarDocente" class="btn-admin-small" style="background:#6c757d;display:none;">
+                      <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn-admin">
+                      <i class="fas fa-plus"></i> Agregar Docente
+                    </button>
+                  </div>
                 </form>
               </div>
 
@@ -213,12 +222,7 @@
                 <select id="filtroCursoAlumno">
                   <option value="todos">Todos los cursos</option>
                 </select>
-                <select id="filtroNivelAlumno">
-                  <option value="todos">Todos los niveles</option>
-                  <option value="Parvularia">Parvularia</option>
-                  <option value="Básica">Básica</option>
-                  <option value="Media">Media</option>
-                </select>
+                
                 <button id="btnFiltrarAlumnos" class="btn-admin-small">
                   <i class="fas fa-search"></i> Filtrar
                 </button>
@@ -319,15 +323,50 @@
         </div>
       </div>
     </div>
-  <% } %>
 
-  <!-- JS - Cargar Flatpickr primero -->
+    <!-- Modal para Alumno -->
+    <div id="modalAlumno" class="modal">
+      <div class="modal-content">
+        <span class="modal-close" onclick="cerrarModalAlumno()">&times;</span>
+        <div class="modal-header">
+          <h3 id="tituloFormAlumno">Agregar Nuevo Alumno</h3>
+        </div>
+        <div class="modal-body">
+          <form id="formAlumno">
+            <div class="form-row">
+              <input type="text" id="alumnoRun" placeholder="RUT" required>
+              <input type="text" id="alumnoNombres" placeholder="Nombres" required>
+            </div>
+            <div class="form-row">
+              <input type="text" id="alumnoApellidoPaterno" placeholder="Apellido Paterno" required>
+              <input type="text" id="alumnoApellidoMaterno" placeholder="Apellido Materno">
+            </div>
+            <div class="form-row">
+              <select id="alumnoCurso" required>
+                <option value="">Seleccionar curso</option>
+              </select>
+            </div>
+            <div class="checkbox-container">
+              <input type="checkbox" id="alumnoActivo" checked>
+              <label for="alumnoActivo">Alumno activo</label>
+            </div>
+            <div class="form-actions">
+              <button type="button" id="btnCancelarAlumno" class="btn-admin-small" style="background:#6c757d;">
+                <i class="fas fa-times"></i> Cancelar
+              </button>
+              <button type="submit" id="btnSubmitAlumno" class="btn-admin">
+                <i class="fas fa-plus"></i> Agregar Alumno
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  <% } %>
   <script src="/vendor/flatpickr/flatpickr.min.js"></script>
   <script src="/vendor/flatpickr/es.js"></script>
   <script src="/js/dashboard.js"></script>
   <script src="/js/admin-panel.js"></script>
-  
-  <!-- Nuevo JS para la gestión admin -->
   <script src="/js/admin-management.js"></script>
 </body>
 </html>
